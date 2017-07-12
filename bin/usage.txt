@@ -1,0 +1,36 @@
+Usage: b2-cfnlib [command] [options]
+
+Commands:
+
+b2-cfnlib stop-stack --stack-name [STACK_NAME]
+
+b2-cfnlib start-stack --stack-name [STACK_NAME]
+
+b2-cfnlib stop-asg --asg-name [ASG]
+
+b2-cfnlib start-asg --asg-name [ASG]
+
+b2-cfnlib stop-rds --rds-instance-id [RDS_INSTANCE_ID]
+
+b2-cfnlib start-rds --rds-instance-id [RDS_INSTANCE_ID]
+
+
+General options
+
+--source-bucket [BUCKET]
+
+    Pucket used to store / pull information from
+
+--aws-role [ROLE_ARN]
+
+    AWS Role to assume when performing operations. Any reads and
+    write to source bucket will be performed outside of this role
+
+
+-r [AWS_REGION], --region [AWS_REGION]
+
+    AWS Region to use when making API calls
+
+-p [AWS_PROFILE], --profile [AWS_PROFILE]
+
+    AWS Shared profile to use when making API calls
