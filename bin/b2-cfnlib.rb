@@ -14,6 +14,9 @@ $options['AWS_ASSUME_ROLE'] = ENV['AWS_ASSUME_ROLE']
 
 $log = Logger.new(STDOUT)
 
+# always flush output
+STDOUT.sync = true
+
 OptionParser.new do |opts|
 
   opts.banner = "Usage: b2-cfnlib [command] [options]"
