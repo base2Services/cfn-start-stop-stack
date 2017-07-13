@@ -47,6 +47,8 @@ module Base2
             eval "self.#{method_name}('stop','#{resource_id}')"
           end
         end
+        configuration = {stack_running: false}
+        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration)
       end
 
       def start_environment(stack_name)
@@ -65,6 +67,8 @@ module Base2
             eval "self.#{method_name}('start','#{resource_id}')"
           end
         end
+        configuration = {stack_running: true}
+        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration)
       end
 
       def start_stop_asg(cmd, asg_name)
