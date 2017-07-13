@@ -33,6 +33,8 @@ module Base2
       def stop_environment(stack_name)
         $log.info("Stopping environment #{stack_name}")
         Common.visit_stack(@cf_client, stack_name, method(:stop_assets), true)
+        configuration = {stack_running: false}
+        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration)
         $log.info("Environment #{stack_name} stopped")
       end
 
@@ -47,13 +49,13 @@ module Base2
             eval "self.#{method_name}('stop','#{resource_id}')"
           end
         end
-        configuration = {stack_running: false}
-        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration)
       end
 
       def start_environment(stack_name)
         $log.info("Starting environment #{stack_name}")
         Common.visit_stack(@cf_client, stack_name, method(:start_assets), true)
+        configuration = {stack_running: true}
+        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration)
         $log.info("Environment #{stack_name} started")
       end
 
@@ -67,8 +69,7 @@ module Base2
             eval "self.#{method_name}('start','#{resource_id}')"
           end
         end
-        configuration = {stack_running: true}
-        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration)
+
       end
 
       def start_stop_asg(cmd, asg_name)
@@ -111,7 +112,6 @@ module Base2
                 min_size: asg.min_size,
                 max_size: asg.max_size
             }
-            s3_prefix = "asg-data/#{asg_name}"
             self.save_item_configuration(s3_prefix, configuration)
 
             $log.info("Setting desired capacity to 0/0/0 for ASG #{asg_name}")
