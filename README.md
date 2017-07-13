@@ -33,9 +33,9 @@ Usage: b2-cfnlib [command] [options]
 
 Commands:
 
-b2-cfnlib stop-stack --stack-name [STACK_NAME]
+b2-cfnlib stop-environment --stack-name [STACK_NAME]
 
-b2-cfnlib start-stack --stack-name [STACK_NAME]
+b2-cfnlib start-environment --stack-name [STACK_NAME]
 
 b2-cfnlib stop-asg --asg-name [ASG]
 
