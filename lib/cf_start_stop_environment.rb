@@ -83,7 +83,7 @@ module Base2
           raise "Couldn't find ASG #{asg_name}"
         end
         asg = asg_details.auto_scaling_groups[0]
-        s3_prefix = "asg-data/#{asg_name}"
+        s3_prefix = "environment-data/asg-data/#{asg_name}"
         case cmd
           when 'start'
 
@@ -133,7 +133,7 @@ module Base2
         end
         rds = Aws::RDS::Resource.new(client: rds_client)
         rds_instance = rds.db_instance(instance_id)
-        s3_prefix = "rds-data/#{instance_id}"
+        s3_prefix = "environment-data/rds-data/#{instance_id}"
         case cmd
           when 'start'
             #retrieve multi-az data from S3
