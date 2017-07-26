@@ -13,7 +13,7 @@ module Base2
       @s3_client = nil
       @s3_bucket = nil
       @credentials = nil
-
+      @dry_run = false
       @@supported_start_stop_resources = {
           "AWS::AutoScaling::AutoScalingGroup" => 'start_stop_asg',
           "AWS::RDS::DBInstance" => 'start_stop_rds'
@@ -27,6 +27,7 @@ module Base2
         if not @credentials.nil?
           @cf_client =  Aws::CloudFormation::Client.new(credentials: @credentials)
         end
+        @dry_run = ENV.key?('DRY_RUN') and ENV['DRY_RUN'] == '1'
       end
 
 
@@ -34,7 +35,7 @@ module Base2
         $log.info("Stopping environment #{stack_name}")
         Common.visit_stack(@cf_client, stack_name, method(:stop_assets), true)
         configuration = {stack_running: false}
-        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration)
+        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration) unless @dry_run
         $log.info("Environment #{stack_name} stopped")
       end
 
@@ -46,7 +47,13 @@ module Base2
             method_name = @@supported_start_stop_resources[resource['resource_type']]
             resource_id = resource['physical_resource_id']
             $log.info("Stopping #{resource_id} of type #{resource.resource_type}")
-            eval "self.#{method_name}('stop','#{resource_id}')"
+
+            # just print out information if running a dry run, otherwise stop assets
+            if not @dry_run
+              eval "self.#{method_name}('stop','#{resource_id}')"
+            else
+              STDOUT.puts("Dry run enabled, skipping actual stop\nFollowing resource would be stopped: #{resource_id}")
+            end
           end
         end
       end
@@ -55,7 +62,7 @@ module Base2
         $log.info("Starting environment #{stack_name}")
         Common.visit_stack(@cf_client, stack_name, method(:start_assets), true)
         configuration = {stack_running: true}
-        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration)
+        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration) unless @dry_run
         $log.info("Environment #{stack_name} started")
       end
 
@@ -66,7 +73,14 @@ module Base2
             method_name = @@supported_start_stop_resources[resource['resource_type']]
             resource_id = resource['physical_resource_id']
             $log.info("Starting #{resource_id} of type #{resource.resource_type}")
-            eval "self.#{method_name}('start','#{resource_id}')"
+
+            # just print out information if running a dry run, otherwise start assets
+            if not @dry_run
+              eval "self.#{method_name}('start','#{resource_id}')"
+            else
+              STDOUT.puts("Dry run enabled, skipping actual start\nFollowing resource would be started: #{resource_id}")
+            end
+
           end
         end
 

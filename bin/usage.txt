@@ -34,3 +34,9 @@ General options
 -p [AWS_PROFILE], --profile [AWS_PROFILE]
 
     AWS Shared profile to use when making API calls
+
+--dry-run
+
+    Applicable only to [start|stop-environment] commands. If dry run is enabled
+    info about assets being started / stopped will ne only printed to standard output,
+    without any action taken.

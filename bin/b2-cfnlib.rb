@@ -54,6 +54,10 @@ OptionParser.new do |opts|
     ENV['AWS_PROFILE'] = profile
   end
 
+  opts.on('--dry-run') do
+    ENV['DRY_RUN'] = '1'
+  end
+
 end.parse!
 
 command = ARGV[0]
