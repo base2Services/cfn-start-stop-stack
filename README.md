@@ -10,7 +10,7 @@ Used to traverse through stack and all it's substacks
 
 ### Start-stop environment functionality
 
-Stop environment will 
+Stop environment will
 
 - Set all ASG's size to 0
 - Stops RDS instances
@@ -50,12 +50,12 @@ General options
 
 --source-bucket [BUCKET]
 
-    Pucket used to store / pull information from
+    Bucket used to store / pull information from
 
 --aws-role [ROLE_ARN]
 
-    AWS Role to assume when performing operations. Any reads and
-    write to source bucket will be performed outside of this role
+    AWS Role to assume when performing start/stop operations.
+    Reading and writing to source bucket is not done using this role. 
 
 
 -r [AWS_REGION], --region [AWS_REGION]
@@ -65,8 +65,8 @@ General options
 -p [AWS_PROFILE], --profile [AWS_PROFILE]
 
     AWS Shared profile to use when making API calls
-    
---dry-run 
+
+--dry-run
 
     Applicable only to [start|stop-environment] commands. If dry run is enabled
     info about assets being started / stopped will ne only printed to standard output,
@@ -76,7 +76,7 @@ General options
 Also, there are some environment variables that control behaviour of the application.
 There are command line switch counter parts for all of the
 
-`AWS_ASSUME_ROLE` as env var or `--aws-role` as CLI switch 
+`AWS_ASSUME_ROLE` as env var or `--aws-role` as CLI switch
 
 `AWS_REGION` as env car or `-r`, `--region` as CLI switch
 

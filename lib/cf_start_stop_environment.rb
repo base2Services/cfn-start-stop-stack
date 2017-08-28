@@ -15,11 +15,19 @@ module Base2
       @credentials = nil
       @dry_run = false
       @@supported_start_stop_resources = {
-          "AWS::AutoScaling::AutoScalingGroup" => 'start_stop_asg',
-          "AWS::RDS::DBInstance" => 'start_stop_rds'
+          'AWS::AutoScaling::AutoScalingGroup' => 'start_stop_asg',
+          'AWS::RDS::DBInstance' => 'start_stop_rds'
       }
 
+      @@resource_start_priorities = {
+          'AWS::RDS::DBInstance' => '100',
+          'AWS::AutoScaling::AutoScalingGroup' => '200'
+      }
+
+      @environment_resources = nil
+
       def initialize()
+        @environment_resources = []
         @s3_client = Aws::S3::Client.new()
         @s3_bucket = ENV['SOURCE_BUCKET']
         @cf_client = Aws::CloudFormation::Client.new()
@@ -31,59 +39,74 @@ module Base2
       end
 
 
-      def stop_environment(stack_name)
-        $log.info("Stopping environment #{stack_name}")
-        Common.visit_stack(@cf_client, stack_name, method(:stop_assets), true)
-        configuration = {stack_running: false}
-        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration) unless @dry_run
-        $log.info("Environment #{stack_name} stopped")
-      end
-
-      def stop_assets(stack_name)
-        # loop over resource, and check wether they support start/stop operations
-        resources = @cf_client.describe_stack_resources(stack_name: stack_name)
-        resources['stack_resources'].each do |resource|
-          if @@supported_start_stop_resources.key?(resource['resource_type'])
-            method_name = @@supported_start_stop_resources[resource['resource_type']]
-            resource_id = resource['physical_resource_id']
-            $log.info("Stopping #{resource_id} of type #{resource.resource_type}")
-
-            # just print out information if running a dry run, otherwise stop assets
-            if not @dry_run
-              eval "self.#{method_name}('stop','#{resource_id}')"
-            else
-              STDOUT.puts("Dry run enabled, skipping actual stop\nFollowing resource would be stopped: #{resource_id}")
-            end
-          end
-        end
-      end
-
       def start_environment(stack_name)
         $log.info("Starting environment #{stack_name}")
-        Common.visit_stack(@cf_client, stack_name, method(:start_assets), true)
+        Common.visit_stack(@cf_client, stack_name, method(:collect_resources), true)
+        do_start_assets
         configuration = {stack_running: true}
         save_item_configuration("environment-data/stack-data/#{stack_name}", configuration) unless @dry_run
         $log.info("Environment #{stack_name} started")
       end
 
-      def start_assets(stack_name)
+
+      def stop_environment(stack_name)
+        $log.info("Stopping environment #{stack_name}")
+        Common.visit_stack(@cf_client, stack_name, method(:collect_resources), true)
+        do_stop_assets
+        configuration = {stack_running: false}
+        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration) unless @dry_run
+        $log.info("Environment #{stack_name} stopped")
+      end
+
+
+      def do_stop_assets
+        # sort start resource by priority
+        @environment_resources = @environment_resources.sort_by { |k| k[:priority]}.reverse
+
+        @environment_resources.each do |resource|
+          $log.info("Stopping resource #{resource[:id]}")
+          # just print out information if running a dry run, otherwise start assets
+          if not @dry_run
+            eval "self.#{resource[:method]}('stop','#{resource[:id]}')"
+          else
+            $log.info("Dry run enabled, skipping stop start\nFollowing resource would be stopped: #{resource[:id]}")
+            $log.debug("Resource type: #{resource[:type]}\n\n")
+          end
+        end
+      end
+
+
+      def do_start_assets
+        # sort start resource by priority
+        @environment_resources = @environment_resources.sort_by { |k| k[:priority]}
+
+        @environment_resources.each do |resource|
+          $log.info("Starting resource #{resource[:id]}")
+          # just print out information if running a dry run, otherwise start assets
+          if not @dry_run
+            eval "self.#{resource[:method]}('start','#{resource[:id]}')"
+          else
+            $log.info("Dry run enabled, skipping actual start\nFollowing resource would be started: #{resource[:id]}")
+            $log.debug("Resource type: #{resource[:type]}\n\n")
+          end
+        end
+      end
+
+      def collect_resources(stack_name)
         resrouces = @cf_client.describe_stack_resources(stack_name: stack_name)
         resrouces['stack_resources'].each do |resource|
           if @@supported_start_stop_resources.key?(resource['resource_type'])
             method_name = @@supported_start_stop_resources[resource['resource_type']]
             resource_id = resource['physical_resource_id']
-            $log.info("Starting #{resource_id} of type #{resource.resource_type}")
 
-            # just print out information if running a dry run, otherwise start assets
-            if not @dry_run
-              eval "self.#{method_name}('start','#{resource_id}')"
-            else
-              STDOUT.puts("Dry run enabled, skipping actual start\nFollowing resource would be started: #{resource_id}")
-            end
-
+            @environment_resources << {
+                id: resource_id,
+                priority: @@resource_start_priorities[resource['resource_type']],
+                method: method_name,
+                type: resource['resource_type']
+            }
           end
         end
-
       end
 
       def start_stop_asg(cmd, asg_name)
