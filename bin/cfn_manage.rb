@@ -3,23 +3,27 @@ require_relative '../lib/cf_common'
 require_relative '../lib/cf_start_stop_environment'
 require 'logger'
 
+# exit with usage information
 def print_usage_exit(code)
   STDERR.puts(File.open("#{File.expand_path(File.dirname(__FILE__))}/usage.txt").read)
   exit code
 end
 
+# global options
 $options = {}
 $options['SOURCE_BUCKET'] = ENV['SOURCE_BUCKET']
 $options['AWS_ASSUME_ROLE'] = ENV['AWS_ASSUME_ROLE']
 
+# global logger
 $log = Logger.new(STDOUT)
 
 # always flush output
 STDOUT.sync = true
 
+# parse command line options
 OptionParser.new do |opts|
 
-  opts.banner = "Usage: b2-cfnlib [command] [options]"
+  opts.banner = 'Usage: cfn_manage [command] [options]'
 
   opts.on('--source-bucket [BUCKET]') do |bucket|
     $options['SOURCE_BUCKET'] = bucket
@@ -46,12 +50,12 @@ OptionParser.new do |opts|
     $options['STACK_NAME'] = asg
   end
 
-  opts.on('-r [AWS_REGION]','--region [AWS_REGION]') do |region|
+  opts.on('-r [AWS_REGION]', '--region [AWS_REGION]') do |region|
     ENV['AWS_REGION'] = region
   end
 
-  opts.on('-p [AWS_PROFILE]','--profile [AWS_PROFILE]') do |profile|
-    ENV['AWS_PROFILE'] = profile
+  opts.on('-p [AWS_PROFILE]', '--profile [AWS_PROFILE]') do |profile|
+    ENV['CFN_AWS_PROFILE'] = profile
   end
 
   opts.on('--dry-run') do
@@ -68,6 +72,8 @@ end
 
 # execute action based on command
 case command
+  when 'help'
+    print_usage_exit(0)
   # asg commands
   when 'stop-asg'
     Base2::CloudFormation::EnvironmentRunStop.new().start_stop_asg('stop', $options['ASG'])

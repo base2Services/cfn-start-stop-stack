@@ -1,18 +1,18 @@
-Usage: b2-cfnlib [command] [options]
+Usage: cfn_manage [command] [options]
 
 Commands:
 
-b2-cfnlib stop-environment --stack-name [STACK_NAME]
+cfn_manage stop-environment --stack-name [STACK_NAME]
 
-b2-cfnlib start-environment --stack-name [STACK_NAME]
+cfn_manage start-environment --stack-name [STACK_NAME]
 
-b2-cfnlib stop-asg --asg-name [ASG]
+cfn_manage stop-asg --asg-name [ASG]
 
-b2-cfnlib start-asg --asg-name [ASG]
+cfn_manage start-asg --asg-name [ASG]
 
-b2-cfnlib stop-rds --rds-instance-id [RDS_INSTANCE_ID]
+cfn_manage stop-rds --rds-instance-id [RDS_INSTANCE_ID]
 
-b2-cfnlib start-rds --rds-instance-id [RDS_INSTANCE_ID]
+cfn_manage start-rds --rds-instance-id [RDS_INSTANCE_ID]
 
 
 General options
