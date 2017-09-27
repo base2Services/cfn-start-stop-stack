@@ -37,7 +37,7 @@ module Base2
         if not @credentials.nil?
           @cf_client =  Aws::CloudFormation::Client.new(credentials: @credentials)
         end
-        @dry_run = ENV.key?('DRY_RUN') and ENV['DRY_RUN'] == '1'
+        @dry_run = (ENV.key?('DRY_RUN') and ENV['DRY_RUN'] == '1')
       end
 
 
