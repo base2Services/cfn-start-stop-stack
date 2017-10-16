@@ -48,7 +48,7 @@ module Base2
           is_multi_az: @rds_instance.multi_az
       }
       # RDS stop start does not support Aurora yet. Ignore if engine is aurora
-      if @rds_instance.engine == 'aurora' or @rds_instance.engine.include?('sqlserver')
+      if @rds_instance.engine == 'aurora'
          $log.info("RDS Instance #{instance_id} engine is aurora and cannot be stoped yet...")
          return configuration
       end
