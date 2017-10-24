@@ -13,7 +13,7 @@ module Base2
       @instance_id = instance_id
     end
 
-    def start
+    def start(configuration)
       if %w(running).include?(@instance.state.name)
         $log.info("Instance #{@instance_id} already running")
         return
@@ -23,12 +23,12 @@ module Base2
     end
 
     def stop
-      if %w(stopped stopping).include?(@instance_id.state.name)
+      if %w(stopped stopping).include?(@instance.state.name)
         $log.info("Instance #{@instance_id} already stopping or stopped")
         return
       end
       $log.info("Stopping instance #{@instance_id}")
-      instance.stop()
+      @instance.stop()
 
       # empty configuration for ec2 instances
       return {}

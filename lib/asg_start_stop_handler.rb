@@ -10,10 +10,10 @@ module Base2
       credentials = Base2::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
       @asg_client = Aws::AutoScaling::Client.new()
       if credentials != nil
-        asg_client = Aws::AutoScaling::Client.new(credentials: credentials)
+        @asg_client = Aws::AutoScaling::Client.new(credentials: credentials)
       end
 
-      asg_details = asg_client.describe_auto_scaling_groups(
+      asg_details = @asg_client.describe_auto_scaling_groups(
           auto_scaling_group_names: [@asg_name]
       )
       if asg_details.auto_scaling_groups.size() == 0
@@ -36,10 +36,11 @@ module Base2
             max_size: @asg.max_size
         }
 
-        $log.info("Setting desired capacity to 0/0/0 for ASG #{@asg_name}")
+        $log.info("Setting desired capacity to 0/0/0 for ASG #{@asg.auto_scaling_group_name}A")
         # set asg configuration to 0/0/0
+        puts @asg.auto_scaling_group_name
         @asg_client.update_auto_scaling_group({
-            auto_scaling_group_name: @asg_name,
+            auto_scaling_group_name: "#{@asg.auto_scaling_group_name}",
             min_size: 0,
             max_size: 0,
             desired_capacity: 0

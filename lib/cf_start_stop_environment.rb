@@ -19,7 +19,8 @@ module Base2
       @@resource_start_priorities = {
           'AWS::RDS::DBInstance' => '100',
           'AWS::AutoScaling::AutoScalingGroup' => '200',
-          'AWS::EC2::Instance' => '200'
+          'AWS::EC2::Instance' => '200',
+          'AWS::CloudWatch::Alarm' => '300'
       }
 
       def initialize()

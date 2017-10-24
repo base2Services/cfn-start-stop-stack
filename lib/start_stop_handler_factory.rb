@@ -21,8 +21,8 @@ module Base2
         when 'AWS::RDS::DBInstance'
           return Base2::RdsStartStopHandler.new(resource_id)
 
-        when 'AWS::AutoScaling::AutoScalingGroup'
-          return Base2::AsgStartStopHandler.new(resource_id)
+        when 'AWS::CloudWatch::Alarm'
+          return Base2::AlarmStartStopHandler.new(resource_id)
 
         else
           return nil
