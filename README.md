@@ -112,5 +112,5 @@ There are command line switch counter parts for all of the
 
  - Bump up version `gem install bump && bump [patch|minor|major]`
  - Update timestamp in `cfn_manage.gemspec`
- - Create and publish gem `gem build cfn_manage.gemspect && gem push cfn_manage-$VERSION.gem`
+ - Create and publish gem `gem build cfn_manage.gemspec && gem push cfn_manage-$VERSION.gem`
  - Create release page on GitHub 
