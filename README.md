@@ -22,13 +22,14 @@ Stop environment will
 - Stops RDS instances
 - If RDS instance is Multi-AZ, it is converted to single-az prior it
   is being stopped
+- Disable CloudWatch Alarm actions
 
 Start environment operation will
 
 - Set all ASG's size to what was prior stop operation
 - Starts ASG instances
 - If ASG instance was Mutli-AZ, it is converted back to Multi-AZ
-
+- Enable CloudWatch Alarm actions
 Metadata about environment, such as number of desired/max/min instances within ASG and MultiAZ property
 for rds instances, is stored in S3 bucket specified via `--source-bucket` switch or `SOURCE_BUCKET` environment
 variable. 
@@ -106,3 +107,10 @@ There are command line switch counter parts for all of the
 `SOURCE_BUCKET` as env var or `--source-bucket` as CLI switch
 
 `DRY_RUN` as env var (set to '1' to enable) or `--dry-run` as CLI switch
+
+## Release process
+
+ - Bump up version `gem install bump && bump [patch|minor|major]`
+ - Update timestamp in `cfn_manage.gemspec`
+ - Create and publish gem `gem build cfn_manage.gemspect && gem push cfn_manage-$VERSION.gem`
+ - Create release page on GitHub 
