@@ -25,12 +25,12 @@ module Base2
 
       def initialize()
         @environment_resources = []
-        @s3_client = Aws::S3::Client.new()
+        @s3_client = Aws::S3::Client.new(retry_limit: 20)
         @s3_bucket = ENV['SOURCE_BUCKET']
-        @cf_client = Aws::CloudFormation::Client.new()
+        @cf_client = Aws::CloudFormation::Client.new(retry_limit: 20)
         @credentials = Base2::AWSCredentials.get_session_credentials('start_stop_environment')
         if not @credentials.nil?
-          @cf_client = Aws::CloudFormation::Client.new(credentials: @credentials)
+          @cf_client = Aws::CloudFormation::Client.new(credentials: @credentials, retry_limit: 20)
         end
         @dry_run = (ENV.key?('DRY_RUN') and ENV['DRY_RUN'] == '1')
       end
