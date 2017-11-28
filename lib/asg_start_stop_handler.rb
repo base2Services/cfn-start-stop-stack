@@ -8,9 +8,9 @@ module Base2
       @asg_name = asg_id
 
       credentials = Base2::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
-      @asg_client = Aws::AutoScaling::Client.new()
+      @asg_client = Aws::AutoScaling::Client.new(retry_limit: 20)
       if credentials != nil
-        @asg_client = Aws::AutoScaling::Client.new(credentials: credentials)
+        @asg_client = Aws::AutoScaling::Client.new(credentials: credentials, retry_limit: 20)
       end
 
       asg_details = @asg_client.describe_auto_scaling_groups(
