@@ -20,7 +20,6 @@ module Base2
     def start(configuration)
       if @rds_instance.db_instance_status == 'available'
         $log.info("RDS Instance #{@instance_id} is already in available state")
-        return
       end
 
       # start rds instance
