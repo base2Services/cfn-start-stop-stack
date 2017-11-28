@@ -89,7 +89,7 @@ module Base2
       @rds_instance.modify({ multi_az: multi_az, apply_immediately: true })
       # allow half an hour for instance to be converted
       wait_states = %w(modifying available)
-      self.wait_rds_instance_states( wait_states)
+      wait_rds_instance_states( wait_states)
     end
 
     def wait_rds_instance_states(wait_states)
