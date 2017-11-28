@@ -8,9 +8,9 @@ module Base2
       @instance_id = instance_id
 
       credentials = Base2::AWSCredentials.get_session_credentials("startstoprds_#{instance_id}")
-      @rds_client = Aws::RDS::Client.new()
+      @rds_client = Aws::RDS::Client.new(retry_limit: 20)
       if credentials != nil
-        @rds_client = Aws::RDS::Client.new(credentials: credentials)
+        @rds_client = Aws::RDS::Client.new(credentials: credentials, retry_limit: 20)
       end
       rds = Aws::RDS::Resource.new(client: @rds_client)
       @rds_instance = rds.db_instance(instance_id)
@@ -20,7 +20,6 @@ module Base2
     def start(configuration)
       if @rds_instance.db_instance_status == 'available'
         $log.info("RDS Instance #{@instance_id} is already in available state")
-        return
       end
 
       # start rds instance
