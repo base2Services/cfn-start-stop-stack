@@ -38,7 +38,7 @@ module Base2
       if configuration['is_multi_az']
         $log.info("Converting to Multi-AZ instance after start (instance #{@instance_id})")
         set_rds_instance_multi_az( true)
-      end
+      end unless configuration.nil?
     end
 
     def stop
@@ -48,7 +48,7 @@ module Base2
       }
       # RDS stop start does not support Aurora yet. Ignore if engine is aurora
       if @rds_instance.engine == 'aurora'
-         $log.info("RDS Instance #{instance_id} engine is aurora and cannot be stoped yet...")
+         $log.info("RDS Instance #{@instance_id} engine is aurora and cannot be stoped yet...")
          return configuration
       end
 
