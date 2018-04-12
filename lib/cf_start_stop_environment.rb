@@ -1,4 +1,11 @@
-require 'aws-sdk'
+require 'aws-sdk-ec2'
+require 'aws-sdk-s3'
+require 'aws-sdk-ec2'
+require 'aws-sdk-cloudformation'
+require 'aws-sdk-rds'
+require 'aws-sdk-cloudwatch'
+require 'aws-sdk-autoscaling'
+
 require_relative '../lib/cf_common'
 require_relative '../lib/aws_credentials'
 require 'json'
@@ -33,6 +40,7 @@ module Base2
           @cf_client = Aws::CloudFormation::Client.new(credentials: @credentials, retry_limit: 20)
         end
         @dry_run = (ENV.key?('DRY_RUN') and ENV['DRY_RUN'] == '1')
+        @continue_on_error = (ENV.key? 'CFN_CONTINUE_ON_ERROR' and ENV['CFN_CONTINUE_ON_ERROR'] == '1')
       end
 
 
@@ -41,7 +49,7 @@ module Base2
         Common.visit_stack(@cf_client, stack_name, method(:collect_resources), true)
         do_start_assets
         configuration = { stack_running: true }
-        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration) unless @dry_run
+        save_item_configuration("environment_data/stack-#{stack_name}", configuration) unless @dry_run
         $log.info("Environment #{stack_name} started")
       end
 
@@ -51,7 +59,7 @@ module Base2
         Common.visit_stack(@cf_client, stack_name, method(:collect_resources), true)
         do_stop_assets
         configuration = { stack_running: false }
-        save_item_configuration("environment-data/stack-data/#{stack_name}", configuration) unless @dry_run
+        save_item_configuration("environment_data/stack-#{stack_name}", configuration) unless @dry_run
         $log.info("Environment #{stack_name} stopped")
       end
 
@@ -61,17 +69,26 @@ module Base2
         @environment_resources = @environment_resources.sort_by { |k| k[:priority] }.reverse
 
         @environment_resources.each do |resource|
-          $log.info("Stopping resource #{resource[:id]}")
-          # just print out information if running a dry run, otherwise start assets
-          if not @dry_run
-            configuration = resource[:handler].stop()
-            if configuration.class == Hash
-              s3_prefix = "environment_data/resource/#{resource[:id]}"
-              save_item_configuration(s3_prefix, configuration)
+          begin
+            $log.info("Stopping resource #{resource[:id]}")
+            # just print out information if running a dry run, otherwise start assets
+            if not @dry_run
+              configuration = resource[:handler].stop()
+              if configuration.class == Hash
+                s3_prefix = "environment_data/resource/#{resource[:id]}"
+                save_item_configuration(s3_prefix, configuration)
+              end
+            else
+              $log.info("Dry run enabled, skipping stop start\nFollowing resource would be stopped: #{resource[:id]}")
+              $log.debug("Resource type: #{resource[:type]}\n\n")
             end
-          else
-            $log.info("Dry run enabled, skipping stop start\nFollowing resource would be stopped: #{resource[:id]}")
-            $log.debug("Resource type: #{resource[:type]}\n\n")
+          rescue => e
+            $log.error("An exception occurred during stop operation against resource #{resource[:id]}")
+            $log.error("#{e.to_s}")
+            $log.error(e.backtrace.join("\n\t"))
+            if not @continue_on_error
+              raise e
+            end
           end
         end
       end
@@ -81,18 +98,27 @@ module Base2
         @environment_resources = @environment_resources.sort_by { |k| k[:priority] }
 
         @environment_resources.each do |resource|
-          $log.info("Starting resource #{resource[:id]}")
-          # just print out information if running a dry run, otherwise start assets
-          if not @dry_run
-            # read configuration
-            s3_prefix = "environment_data/resource/#{resource[:id]}"
-            configuration = get_object_configuration(s3_prefix)
+          begin
+            $log.info("Starting resource #{resource[:id]}")
+            # just print out information if running a dry run, otherwise start assets
+            if not @dry_run
+              # read configuration
+              s3_prefix = "environment_data/resource/#{resource[:id]}"
+              configuration = get_object_configuration(s3_prefix)
 
-            # start
-            resource[:handler].start(configuration)
-          else
-            $log.info("Dry run enabled, skipping actual start\nFollowing resource would be started: #{resource[:id]}")
-            $log.debug("Resource type: #{resource[:type]}\n\n")
+              # start
+              resource[:handler].start(configuration)
+            else
+              $log.info("Dry run enabled, skipping actual start\nFollowing resource would be started: #{resource[:id]}")
+              $log.debug("Resource type: #{resource[:type]}\n\n")
+            end
+          rescue => e
+              $log.error("An exception occurred during start operation against resource #{resource[:id]}")
+              $log.error("#{e.to_s}")
+              $log.error(e.backtrace.join("\n\t"))
+              if not @continue_on_error
+                raise e
+              end
           end
         end
       end

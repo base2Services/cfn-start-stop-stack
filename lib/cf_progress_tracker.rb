@@ -1,4 +1,4 @@
-require 'aws-sdk'
+require 'aws-sdk-cloudformation'
 require_relative './cf_common'
 
 module Base2

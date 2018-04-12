@@ -93,6 +93,14 @@ General options
     Applicable only to [start|stop-environment] commands. If dry run is enabled
     info about assets being started / stopped will ne only printed to standard output,
     without any action taken.
+
+--continue-on-error
+
+    Applicable only to [start|stop-environment] commands. If there is problem with stopping a resource,
+    (e.g. cloudformation stack not being synced or manual resource deletion) script will continue it's 
+    operation. By defult script stops when there is problem with starting/stopping resource, and expects
+    manual intervention to fix the root cause for failure. 
+
 ```
 
 Also, there are some environment variables that control behaviour of the application.

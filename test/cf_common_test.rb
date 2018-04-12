@@ -1,5 +1,5 @@
 require '../lib/cf_common.rb'
-require 'aws-sdk'
+require 'aws-sdk-cloudformation'
 
 cf_client = Aws::CloudFormation::Client.new(region:'us-east-1')
 
