@@ -62,6 +62,10 @@ OptionParser.new do |opts|
     ENV['DRY_RUN'] = '1'
   end
 
+  opts.on('--continue-on-error') do
+    ENV['CFN_CONTINUE_ON_ERROR'] = '1'
+  end
+
 end.parse!
 
 command = ARGV[0]
