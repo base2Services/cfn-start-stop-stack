@@ -2,8 +2,8 @@ require 'rake'
 
 Gem::Specification.new do |s|
   s.name        = 'cfn_manage'
-  s.version     = '0.2.8'
-  s.date        = '2018-04-12'
+  s.version     = '0.3.0'
+  s.date        = '2018-04-26'
   s.summary     = 'Manage AWS Cloud Formation stacks'
   s.description = ''
   s.authors     = ['Base2Services', 'Nikola Tosic']
