@@ -2,6 +2,7 @@ require_relative '../lib/asg_start_stop_handler'
 require_relative '../lib/ec2_start_stop_handler'
 require_relative '../lib/rds_start_stop_handler'
 require_relative '../lib/alarm_start_stop_handler'
+require_relative '../lib/spot_fleet_start_stop_handler'
 
 module Base2
 
@@ -24,6 +25,8 @@ module Base2
         when 'AWS::CloudWatch::Alarm'
           return Base2::AlarmStartStopHandler.new(resource_id)
 
+        when 'AWS::EC2::SpotFleet'
+          return Base2::SpotFleetStartStopHandler.new(resource_id)
         else
           return nil
       end

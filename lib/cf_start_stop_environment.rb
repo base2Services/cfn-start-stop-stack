@@ -27,6 +27,7 @@ module Base2
           'AWS::RDS::DBInstance' => '100',
           'AWS::AutoScaling::AutoScalingGroup' => '200',
           'AWS::EC2::Instance' => '200',
+          'AWS::EC2::SpotFleet' => '200',
           'AWS::CloudWatch::Alarm' => '300'
       }
 

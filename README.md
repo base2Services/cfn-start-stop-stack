@@ -46,6 +46,45 @@ for supporting dynamic discovery of order of execution - resource tags or local 
 the possible sources. 
 
 
+## Start - stop cloudformation stack 
+
+### Supported resources
+
+#### AWS::AutoScaling::AutoScalingGroup
+
+**Stop** operation will set desired capacity of ASG to 0
+
+**Start** operation will restore previous capacity
+
+#### AWS::EC2::Instance
+
+**Stop** operation will stop instance [using StopInstances api call](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_StopInstances.html)
+
+**Start** operation will start instance [using StartInstances api call](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_StartInstances.html)
+
+
+#### AWS::RDS::DBInstance
+
+**Stop** operation will stop rds instance. Aurora is not supported yet on AWS side. Note that RDS instance can be stopped 
+for two weeks at maximum. If instance is Multi-AZ, it will get converted to Single-AZ instance, before being stopped
+(Amazon does not support stopping Multi-AZ rds instances)
+
+
+**Start** operation will start rds instance. If instance was running in Multi-AZ mode before being stopped, 
+it will get converted to Multi-AZ prior being started
+
+#### AWS::CloudWatch::Alarm
+
+**Stop** operation will disable all of alarm's actions
+
+**Start** operation will enable all of alarm's actions
+
+#### AWS::EC2::SpotFleet
+
+**Stop** operation will set spot fleet target to capacity to 0
+
+**Start** operation will restore spot fleet target to capacity to what was set prior the stack being stopped.
+
 ## CLI usage
 
 You'll find usage of `cfn_manage` within `usage.txt` file
