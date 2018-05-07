@@ -2,13 +2,13 @@ require 'rake'
 
 Gem::Specification.new do |s|
   s.name        = 'cfn_manage'
-  s.version     = '0.3.0'
-  s.date        = '2018-04-26'
+  s.version     = '0.3.1'
+  s.date        = '2018-05-07'
   s.summary     = 'Manage AWS Cloud Formation stacks'
   s.description = ''
   s.authors     = ['Base2Services', 'Nikola Tosic']
   s.email       = 'itsupport@base2services.com'
-  s.files       = FileList["lib/*.rb","bin/*"]
+  s.files       = FileList['lib/*.rb', 'bin/*']
   s.homepage    = 'https://github.com/base2Services/cfn-library/blob/master/README.md'
   s.license       = 'MIT'
   s.executables << 'cfn_manage'
