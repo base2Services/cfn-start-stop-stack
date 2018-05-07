@@ -46,9 +46,10 @@ module Base2
       configuration = {
           is_multi_az: @rds_instance.multi_az
       }
-      # RDS stop start does not support Aurora yet. Ignore if engine is aurora
-      if @rds_instance.engine == 'aurora'
-         $log.info("RDS Instance #{@instance_id} engine is aurora and cannot be stoped yet...")
+      # RDS list of exluded engines that don't support RDS stop start
+      excluded_engines = %w(aurora aurora-mysql)
+      if excluded_engines.include? @rds_instance.engine
+         $log.info("RDS Instance #{@instance_id} engine is #{@rds_instance.engine} and cannot be stoped yet...")
          return configuration
       end
 
