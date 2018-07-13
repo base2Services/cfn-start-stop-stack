@@ -42,6 +42,10 @@ module Base2
         end
         @dry_run = (ENV.key?('DRY_RUN') and ENV['DRY_RUN'] == '1')
         @continue_on_error = (ENV.key? 'CFN_CONTINUE_ON_ERROR' and ENV['CFN_CONTINUE_ON_ERROR'] == '1')
+      rescue NoMethodError => e
+        puts "Got No Method Error on CloudFormation::initialize, this often means that you're missing a AWS_DEFAULT_REGION"
+      rescue Aws::Sigv4::Errors::MissingCredentialsError => e
+        puts "Got Missing Credentials Error on CloudFormation::initialize, this often means that AWS_PROFILE is unset, or no default credentials were provided."
       end
 
 
