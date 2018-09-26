@@ -22,6 +22,9 @@ module Base2
         when 'AWS::RDS::DBInstance'
           return Base2::RdsStartStopHandler.new(resource_id)
 
+        when 'AWS::RDS::DBCluster'
+          return Base2::AuroraClusterStartStopHandler.new(resource_id)
+
         when 'AWS::CloudWatch::Alarm'
           return Base2::AlarmStartStopHandler.new(resource_id)
 
