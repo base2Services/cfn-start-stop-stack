@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'aws-sdk-s3', '~> 1', '<2'
   s.add_runtime_dependency 'aws-sdk-ec2', '~> 1', '<2'
   s.add_runtime_dependency 'aws-sdk-cloudformation', '~> 1', '<2'
-  s.add_runtime_dependency 'aws-sdk-rds', '~> 1', '<2'
+  s.add_runtime_dependency 'aws-sdk-rds', '>=1.31.0', '<2'
   s.add_runtime_dependency 'aws-sdk-cloudwatch', '~> 1', '<2'
   s.add_runtime_dependency 'aws-sdk-iam', '~> 1', '<2'
   s.add_runtime_dependency 'aws-sdk-autoscaling', '~> 1', '<2'
