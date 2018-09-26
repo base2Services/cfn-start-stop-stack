@@ -14,6 +14,9 @@ cfn_manage stop-rds --rds-instance-id [RDS_INSTANCE_ID]
 
 cfn_manage start-rds --rds-instance-id [RDS_INSTANCE_ID]
 
+cfn_manage stop-aurora-cluster --aurora-cluster-id [AURORA_CLUSTER_ID]
+
+cfn_manage start-aurora-cluster --aurora-cluster-id [AURORA_CLUSTER_ID]
 
 General options
 
