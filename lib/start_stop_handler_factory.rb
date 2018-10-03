@@ -1,6 +1,7 @@
 require_relative '../lib/asg_start_stop_handler'
 require_relative '../lib/ec2_start_stop_handler'
 require_relative '../lib/rds_start_stop_handler'
+require_relative '../lib/aurora_cluster_start_stop_handler'
 require_relative '../lib/alarm_start_stop_handler'
 require_relative '../lib/spot_fleet_start_stop_handler'
 

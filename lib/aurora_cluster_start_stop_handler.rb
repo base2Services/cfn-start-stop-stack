@@ -20,9 +20,10 @@ module Base2
     def start(configuration)
       if @rds_cluster.status == 'available'
         $log.info("Aurora Cluster #{@cluster_id} is already in available state")
+        return
       end
 
-      # start rds clsuter
+      # start rds cluster
       if @rds_cluster.status == 'stopped'
         $log.info("Starting Aurora cluster #{@cluster_id}")
         @rds_client.start_db_cluster({ db_cluster_identifier: @cluster_id })
@@ -31,13 +32,19 @@ module Base2
         $log.info("Waiting Aurora cluster to become available #{@cluster_id}")
         wait_rds_cluster_states( %w(starting available))
       else
-        wait_rds_cluster_states( %w(available))
+        $log.info("Aurora Cluster #{@cluster_id} is not in a stopped state. State: #{@rds_cluster.status}")
       end
     end
 
     def stop
+      if @rds_cluster.status == 'stopped'
+        $log.info("Aurora Cluster #{@cluster_id} is already stopped")
+        return {}
+      end
+
       if @rds_cluster.status != 'available'
         $log.info("Aurora Cluster #{@cluster_id} is not in a available state. State: #{@rds_cluster.status}")
+        return {}
       end
 
       # stop rds cluster and wait for it to be fully stopped
@@ -49,7 +56,7 @@ module Base2
       return {}
     end
 
-    def wait_rds_cluster_states()
+    def wait_rds_cluster_states(wait_states=[])
       wait_states.each do |state|
         # reached state must be steady, at least a minute.
         state_count = 0
@@ -57,9 +64,10 @@ module Base2
         attempts = 0
         rds = Aws::RDS::Resource.new(client: @rds_client)
         until attempts == (max_attempts = 60*6) do
-          $log.info("Aurora Cluster #{@rds_cluster.db_cluster_identifier} state: #{@rds_cluster.status}, waiting for #{state}")
+          cluster = rds.db_cluster(@cluster_id)
+          $log.info("Aurora Cluster #{cluster.db_cluster_identifier} state: #{cluster.status}, waiting for #{state}")
 
-          if @rds_cluster.status == "#{state}"
+          if cluster.status == "#{state}"
             state_count = state_count + 1
             $log.info("#{state_count}/#{steady_count}")
           else
