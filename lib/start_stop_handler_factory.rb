@@ -1,6 +1,7 @@
 require_relative '../lib/asg_start_stop_handler'
 require_relative '../lib/ec2_start_stop_handler'
 require_relative '../lib/rds_start_stop_handler'
+require_relative '../lib/aurora_cluster_start_stop_handler'
 require_relative '../lib/alarm_start_stop_handler'
 require_relative '../lib/spot_fleet_start_stop_handler'
 
@@ -21,6 +22,9 @@ module Base2
 
         when 'AWS::RDS::DBInstance'
           return Base2::RdsStartStopHandler.new(resource_id)
+
+        when 'AWS::RDS::DBCluster'
+          return Base2::AuroraClusterStartStopHandler.new(resource_id)
 
         when 'AWS::CloudWatch::Alarm'
           return Base2::AlarmStartStopHandler.new(resource_id)

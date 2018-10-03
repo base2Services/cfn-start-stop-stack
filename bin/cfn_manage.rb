@@ -46,6 +46,10 @@ OptionParser.new do |opts|
     $options['RDS_INSTANCE_ID'] = asg
   end
 
+  opts.on('--aurora-cluster-id [AURORA_CLUSTER_ID]') do |asg|
+    $options['AURORA_CLUSTER_ID'] = asg
+  end
+
   opts.on('--stack-name [STACK_NAME]') do |asg|
     $options['STACK_NAME'] = asg
   end
@@ -90,8 +94,13 @@ case command
   when 'start-rds'
     Base2::CloudFormation::EnvironmentRunStop.new().start_stop_rds('start', $options['RDS_INSTANCE_ID'])
 
+  # aurora cluster commands
+  when 'stop-aurora-cluster'
+    Base2::CloudFormation::EnvironmentRunStop.new().start_stop_aurora_cluster('stop', $options['AURORA_CLUSTER_ID'])
+  when 'start-aurora-cluster'
+    Base2::CloudFormation::EnvironmentRunStop.new().start_stop_aurora_cluster('start', $options['AURORA_CLUSTER_ID'])
+
   # stack commands
-  # rds commands
   when 'stop-environment'
     Base2::CloudFormation::EnvironmentRunStop.new().stop_environment($options['STACK_NAME'])
   when 'start-environment'

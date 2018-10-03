@@ -25,6 +25,7 @@ module Base2
 
       @@resource_start_priorities = {
           'AWS::RDS::DBInstance' => '100',
+          'AWS::RDS::DBCluster' => '100',
           'AWS::AutoScaling::AutoScalingGroup' => '200',
           'AWS::EC2::Instance' => '200',
           'AWS::EC2::SpotFleet' => '200',
