@@ -69,6 +69,35 @@ module Base2
         $log.info("Environment #{stack_name} stopped")
       end
 
+      def start_stop_aurora_cluster(action,cluster_id)
+        start_stop_handler = Base2::StartStopHandlerFactory.get_start_stop_handler(
+            'AWS::RDS::DBCluster',
+            cluster_id
+        )
+        @environment_resources << {
+            id: cluster_id,
+            priority: '100',
+            handler: start_stop_handler,
+            type: 'AWS::RDS::DBCluster'
+        }
+        do_stop_assets if action == 'stop'
+        do_start_assets if action == 'start'
+      end
+
+      def start_stop_rds(action,instance_id)
+        start_stop_handler = Base2::StartStopHandlerFactory.get_start_stop_handler(
+            'AWS::RDS::DBInstance',
+            instance_id
+        )
+        @environment_resources << {
+            id: instance_id,
+            priority: '100',
+            handler: start_stop_handler,
+            type: 'AWS::RDS::DBInstance'
+        }
+        do_stop_assets if action == 'stop'
+        do_start_assets if action == 'start'
+      end
 
       def do_stop_assets
         # sort start resource by priority
