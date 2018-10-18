@@ -2,6 +2,10 @@ Usage: cfn_manage [command] [options]
 
 Commands:
 
+cfn_manage help
+
+cfn_manage version
+
 cfn_manage stop-environment --stack-name [STACK_NAME]
 
 cfn_manage start-environment --stack-name [STACK_NAME]
@@ -18,7 +22,19 @@ cfn_manage stop-aurora-cluster --aurora-cluster-id [AURORA_CLUSTER_ID]
 
 cfn_manage start-aurora-cluster --aurora-cluster-id [AURORA_CLUSTER_ID]
 
-General options
+cfn_manage stop-ec2 --ec2-instance-id [EC2_INSTANCE_ID]
+
+cfn_manage start-ec2 --ec2-instance-id [EC2_INSTANCE_ID]
+
+cfn_manage stop-spot-fleet --spot-fleet [SPOT_FLEET]
+
+cfn_manage start-spot-fleet --spot-fleet [SPOT_FLEET]
+
+cfn_manage disable-alarm --alarm [ALARM]
+
+cfn_manage enable-alarm --alarm [ALARM]
+
+General options:
 
 --source-bucket [BUCKET]
 
