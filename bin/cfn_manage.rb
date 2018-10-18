@@ -10,7 +10,7 @@ def print_usage_exit(code)
 end
 
 def print_version
-  STDOUT.puts("Name: cfn_manage\nVersion: 0.4.4")
+  STDOUT.puts("Name: cfn_manage\nVersion: 0.5.0")
 end
 
 # global options
@@ -39,7 +39,7 @@ OptionParser.new do |opts|
   end
 
   opts.on('--stack-name [STACK_NAME]') do |stack|
-    $options['STACK'] = stack
+    $options['STACK_NAME'] = stack
   end
 
   opts.on('--asg-name [ASG]') do |asg|

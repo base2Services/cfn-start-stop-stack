@@ -109,7 +109,6 @@ module Base2
         environment_resources_by_priority = @environment_resources.partition { |k| k[:priority] }
 
         environment_resources_by_priority.each do |priority|
-          $log.info("Starting resources with priority #{priority[0][:priority]}")
           priority.each do |resource|
             begin
               $log.info("Stopping resource #{resource[:id]}")
@@ -135,11 +134,9 @@ module Base2
           end
 
           if not @dry_run and @wait_async
-
-            $log.info("Waiting for resources with priority #{priority[0][:priority]}")
             priority.each do |resource|
               begin
-                resource[:handler].wait(%w(stopping stopped))
+                resource[:handler].wait('stopped')
               rescue => e
                 $log.error("An exception occurred during wait operation against resource #{resource[:id]}")
                 $log.error("#{e.to_s}")
@@ -149,7 +146,6 @@ module Base2
                 end
               end
             end
-
           end
 
         end
@@ -161,8 +157,6 @@ module Base2
         environment_resources_by_priority = @environment_resources.partition { |k| k[:priority] }
 
         environment_resources_by_priority.each do |priority|
-          $log.info("Starting resources with priority #{priority[0][:priority]}")
-
           priority.each do |resource|
             begin
               $log.info("Starting resource #{resource[:id]}")
@@ -189,11 +183,9 @@ module Base2
           end
 
           if not @dry_run and @wait_async
-
-            $log.info("Waiting for resources with priority #{priority[0][:priority]}")
             priority.each do |resource|
               begin
-                resource[:handler].wait(%w(starting available))
+                resource[:handler].wait('available')
               rescue => e
                 $log.error("An exception occurred during wait operation against resource #{resource[:id]}")
                 $log.error("#{e.to_s}")

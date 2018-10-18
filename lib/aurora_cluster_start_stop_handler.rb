@@ -27,11 +27,10 @@ module Base2
       if @rds_cluster.status == 'stopped'
         $log.info("Starting Aurora cluster #{@cluster_id}")
         @rds_client.start_db_cluster({ db_cluster_identifier: @cluster_id })
-
         unless @skip_wait
           # wait cluster to become available
           $log.info("Waiting Aurora cluster to become available #{@cluster_id}")
-          wait( %w(starting available))
+          wait('available')
         end
       else
         $log.info("Aurora Cluster #{@cluster_id} is not in a stopped state. State: #{@rds_cluster.status}")
@@ -48,42 +47,39 @@ module Base2
         $log.info("Aurora Cluster #{@cluster_id} is not in a available state. State: #{@rds_cluster.status}")
         return {}
       end
-
       # stop rds cluster and wait for it to be fully stopped
       $log.info("Stopping aurora cluster #{@cluster_id}")
       @rds_client.stop_db_cluster({ db_cluster_identifier: @cluster_id })
       unless @skip_wait
         $log.info("Waiting aurora cluster to be stopped #{@cluster_id}")
-        wait(%w(stopping stopped))
+        wait('stopped')
       end
       return {}
     end
 
-    def wait(wait_states=[])
-      wait_states.each do |state|
-        # reached state must be steady, at least a minute.
-        state_count = 0
-        steady_count = 4
-        attempts = 0
-        rds = Aws::RDS::Resource.new(client: @rds_client)
-        until attempts == (max_attempts = 60*6) do
-          cluster = rds.db_cluster(@cluster_id)
-          $log.info("Aurora Cluster #{cluster.db_cluster_identifier} state: #{cluster.status}, waiting for #{state}")
+    def wait(completed_state)
+      # reached state must be steady, at least a minute.
+      state_count = 0
+      steady_count = 4
+      attempts = 0
+      rds = Aws::RDS::Resource.new(client: @rds_client)
+      until attempts == (max_attempts = 60*6) do
+        cluster = rds.db_cluster(@cluster_id)
+        $log.info("Aurora Cluster #{cluster.db_cluster_identifier} state: #{cluster.status}, waiting for #{completed_state}")
 
-          if cluster.status == "#{state}"
-            state_count = state_count + 1
-            $log.info("#{state_count}/#{steady_count}")
-          else
-            state_count = 0
-          end
-          break if state_count == steady_count
-          attempts = attempts + 1
-          sleep(15)
+        if cluster.status == "#{completed_state}"
+          state_count = state_count + 1
+          $log.info("#{state_count}/#{steady_count}")
+        else
+          state_count = 0
         end
+        break if state_count == steady_count
+        attempts = attempts + 1
+        sleep(15)
+      end
 
-        if attempts == max_attempts
-          $log.error("RDS Aurora Cluster #{@cluster_id} did not enter #{state} state, however continuing operations...")
-        end
+      if attempts == max_attempts
+        $log.error("RDS Aurora Cluster #{@cluster_id} did not enter #{state} state, however continuing operations...")
       end
     end
 
