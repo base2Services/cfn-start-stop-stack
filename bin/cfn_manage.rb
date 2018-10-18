@@ -82,6 +82,15 @@ OptionParser.new do |opts|
     ENV['CFN_CONTINUE_ON_ERROR'] = '1'
   end
 
+  opts.on('--wait-async') do
+    ENV['WAIT_ASYNC'] = '1'
+    ENV['SKIP_WAIT'] = '1'
+  end
+
+  opts.on('--skip_wait') do
+    ENV['SKIP_WAIT'] = '1'
+  end
+
 end.parse!
 
 command = ARGV[0]

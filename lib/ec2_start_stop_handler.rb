@@ -6,11 +6,12 @@ module Base2
 
     @instance
 
-    def initialize(instance_id)
+    def initialize(instance_id, skip_wait)
       credentials = Base2::AWSCredentials.get_session_credentials("stoprun_#{instance_id}")
       ec2_client = Aws::EC2::Client.new(credentials: credentials, retry_limit: 20)
       @instance = Aws::EC2::Resource.new(client: ec2_client, retry_limit: 20).instance(instance_id)
       @instance_id = instance_id
+      @skip_wait = skip_wait
     end
 
     def start(configuration)
@@ -34,8 +35,9 @@ module Base2
       return {}
     end
 
-
-
+    def wait(wait_states=[])
+      $log.debug("Not waiting for EC2 instance #{@instance_id}")
+    end
 
   end
 end

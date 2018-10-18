@@ -4,9 +4,9 @@ module Base2
 
   class AuroraClusterStartStopHandler
 
-    def initialize(cluster_id)
+    def initialize(cluster_id, skip_wait)
       @cluster_id = cluster_id
-
+      @skip_wait = skip_wait
       credentials = Base2::AWSCredentials.get_session_credentials("startstopcluster_#{cluster_id}")
       @rds_client = Aws::RDS::Client.new(retry_limit: 20)
       if credentials != nil
@@ -28,9 +28,11 @@ module Base2
         $log.info("Starting Aurora cluster #{@cluster_id}")
         @rds_client.start_db_cluster({ db_cluster_identifier: @cluster_id })
 
-        # wait cluster to become available
-        $log.info("Waiting Aurora cluster to become available #{@cluster_id}")
-        wait_rds_cluster_states( %w(starting available))
+        unless @skip_wait
+          # wait cluster to become available
+          $log.info("Waiting Aurora cluster to become available #{@cluster_id}")
+          wait( %w(starting available))
+        end
       else
         $log.info("Aurora Cluster #{@cluster_id} is not in a stopped state. State: #{@rds_cluster.status}")
       end
@@ -50,13 +52,14 @@ module Base2
       # stop rds cluster and wait for it to be fully stopped
       $log.info("Stopping aurora cluster #{@cluster_id}")
       @rds_client.stop_db_cluster({ db_cluster_identifier: @cluster_id })
-      $log.info("Waiting aurora cluster to be stopped #{@cluster_id}")
-      wait_rds_cluster_states(%w(stopping stopped))
-
+      unless @skip_wait
+        $log.info("Waiting aurora cluster to be stopped #{@cluster_id}")
+        wait(%w(stopping stopped))
+      end
       return {}
     end
 
-    def wait_rds_cluster_states(wait_states=[])
+    def wait(wait_states=[])
       wait_states.each do |state|
         # reached state must be steady, at least a minute.
         state_count = 0

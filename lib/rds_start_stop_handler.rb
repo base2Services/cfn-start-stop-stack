@@ -4,9 +4,9 @@ module Base2
 
   class RdsStartStopHandler
 
-    def initialize(instance_id)
+    def initialize(instance_id, skip_wait)
       @instance_id = instance_id
-
+      @skip_wait = skip_wait
       credentials = Base2::AWSCredentials.get_session_credentials("startstoprds_#{instance_id}")
       @rds_client = Aws::RDS::Client.new(retry_limit: 20)
       if credentials != nil
@@ -35,10 +35,12 @@ module Base2
         @rds_client.start_db_instance({ db_instance_identifier: @instance_id })
 
         # wait instance to become available
-        $log.info("Waiting db instance to become available #{@instance_id}")
-        wait_rds_instance_states( %w(starting available))
+        unless @skip_wait
+          $log.info("Waiting db instance to become available #{@instance_id}")
+          wait( %w(starting available))
+        end
       else
-        wait_rds_instance_states( %w(available))
+        wait( %w(available)) unless @skip_wait
       end
 
       # convert rds instance to mutli-az if required
@@ -82,8 +84,10 @@ module Base2
       # stop rds instance and wait for it to be fully stopped
       $log.info("Stopping instance #{@instance_id}")
       @rds_client.stop_db_instance({ db_instance_identifier: @instance_id })
-      $log.info("Waiting db instance to be stopped #{@instance_id}")
-      wait_rds_instance_states(%w(stopping stopped))
+      unless @skip_wait
+        $log.info("Waiting db instance to be stopped #{@instance_id}")
+        wait(%w(stopping stopped))
+      end
 
       return configuration
     end
@@ -96,10 +100,10 @@ module Base2
       @rds_instance.modify({ multi_az: multi_az, apply_immediately: true })
       # allow half an hour for instance to be converted
       wait_states = %w(modifying available)
-      wait_rds_instance_states( wait_states)
+      wait( wait_states)
     end
 
-    def wait_rds_instance_states(wait_states)
+    def wait(wait_states)
       wait_states.each do |state|
         # reached state must be steady, at least a minute. Modifying an instance to/from MultiAZ can't be shorter
         # than 40 seconds, hence steady count is 4
@@ -128,7 +132,7 @@ module Base2
       end
     end
 
-    private :set_rds_instance_multi_az, :wait_rds_instance_states
+    private :set_rds_instance_multi_az
 
   end
 

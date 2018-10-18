@@ -66,3 +66,13 @@ General options:
     (e.g. cloudformation stack not being synced or manual resource deletion) script will continue it's
     operation. By defult script stops when there is problem with starting/stopping resource, and expects
     manual intervention to fix the root cause for failure.
+
+--skip-wait
+
+    Wating for resources to be completely stopped and sterted before continuing is ignored.
+
+--wait-async
+
+  Default wait action is to wait for each indiviual resource to be stopped and started before continuing.
+  This will enabled waiting for resources in goups based on priority. Option only useful when used with
+  start-environment and stop-environment commands.

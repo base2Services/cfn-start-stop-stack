@@ -4,9 +4,9 @@ module Base2
 
   class SpotFleetStartStopHandler
 
-    def initialize(fleet_id)
+    def initialize(fleet_id, skip_wait)
       @fleet_id = fleet_id
-
+      @skip_wait = skip_wait
       credentials = Base2::AWSCredentials.get_session_credentials("startstopfleet_#{fleet_id}")
       @ec2_client = Aws::EC2::Client.new(retry_limit: 20)
       if credentials != nil
@@ -46,6 +46,10 @@ module Base2
       })
 
       return configuration
+    end
+
+    def wait(wait_states=[])
+      $log.debug("Not waiting for spot fleet #{@fleet_id}")
     end
 
   end
