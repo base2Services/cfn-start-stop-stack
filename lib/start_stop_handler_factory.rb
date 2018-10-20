@@ -4,7 +4,7 @@ require_relative '../lib/rds_start_stop_handler'
 require_relative '../lib/aurora_cluster_start_stop_handler'
 require_relative '../lib/alarm_start_stop_handler'
 require_relative '../lib/spot_fleet_start_stop_handler'
-require_relative '../lib/ecs_service_start_stop_handler'
+require_relative '../lib/ecs_cluster_start_stop_handler'
 
 module Base2
 
@@ -34,7 +34,7 @@ module Base2
           return Base2::SpotFleetStartStopHandler.new(resource_id, skip_wait)
 
         when 'AWS::ECS::Cluster'
-          return Base2::EcsServiceStartStopHandler.new(resource_id)
+          return Base2::EcsClusterStartStopHandler.new(resource_id, skip_wait)
 
         else
           return nil

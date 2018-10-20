@@ -1,17 +1,15 @@
 require_relative '../lib/aws_credentials'
 
 module Base2
+  class EcsClusterStartStopHandler
 
-  class EcsServiceStartStopHandler
-
-    @instance
-
-    def initialize(cluster_id)
+    def initialize(cluster_id, skip_wait)
       credentials = Base2::AWSCredentials.get_session_credentials("stoprun_#{cluster_id}")
       @ecs_client = Aws::ECS::Client.new(credentials: credentials, retry_limit: 20)
       @services = @ecs_client.list_services(cluster: cluster_id).service_arns
       $log.info("Found #{@services.count} services in ECS cluster #{cluster_id}")
       @cluster = cluster_id
+      @skip_wait = skip_wait
     end
 
     def start(configuration)
@@ -60,8 +58,9 @@ module Base2
       return configuration
     end
 
-
-
+    def wait(completed_status)
+      $log.debug("Not waiting for ECS Services in cluster #{@cluster}")
+    end
 
   end
 end

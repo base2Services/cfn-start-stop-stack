@@ -62,6 +62,10 @@ OptionParser.new do |opts|
     $options['SPOT_FLEET'] = spot
   end
 
+  opts.on('--ecs-cluster [ECS_CLUSTER]') do |ecs|
+    $options['ECS_CLUSTER'] = ecs
+  end
+
   opts.on('--alarm [ALARM]') do |alarm|
     $options['ALARM'] = alarm
   end
@@ -134,6 +138,13 @@ case command
     Base2::CloudFormation::EnvironmentRunStop.new().start_resource($options['SPOT_FLEET'],'AWS::EC2::SpotFleet')
   when 'start-spot-fleet'
     Base2::CloudFormation::EnvironmentRunStop.new().start_resource($options['SPOT_FLEET'],'AWS::EC2::SpotFleet')
+
+    # spot fleet
+  when 'stop-ecs-cluster'
+    Base2::CloudFormation::EnvironmentRunStop.new().start_resource($options['ECS_CLUSTER'],'AWS::ECS::Cluster')
+  when 'start-ecs-cluster'
+    Base2::CloudFormation::EnvironmentRunStop.new().start_resource($options['ECS_CLUSTER'],'AWS::ECS::Cluster')
+
 
   # cloudwatch alarm
   when 'disable-alarm'
