@@ -34,6 +34,11 @@ module Base2
       @alarm.disable_actions({})
       return {}
     end
+
+    def wait(wait_states=[])
+      $log.debug("Not waiting for alarm #{@alarm_id}")
+    end
+
   end
 
 end

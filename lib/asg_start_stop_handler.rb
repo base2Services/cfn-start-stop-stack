@@ -4,9 +4,9 @@ module Base2
 
   class AsgStartStopHandler
 
-    def initialize(asg_id)
+    def initialize(asg_id, skip_wait)
       @asg_name = asg_id
-
+      @skip_wait = skip_wait
       credentials = Base2::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
       @asg_client = Aws::AutoScaling::Client.new(retry_limit: 20)
       if credentials != nil
@@ -64,6 +64,10 @@ module Base2
           max_size: configuration['max_size'],
           desired_capacity: configuration['desired_capacity']
       })
+    end
+
+    def wait(wait_states=[])
+      $log.debug("Not waiting for ASG #{@asg_name}")
     end
 
   end

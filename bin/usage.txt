@@ -2,6 +2,10 @@ Usage: cfn_manage [command] [options]
 
 Commands:
 
+cfn_manage help
+
+cfn_manage version
+
 cfn_manage stop-environment --stack-name [STACK_NAME]
 
 cfn_manage start-environment --stack-name [STACK_NAME]
@@ -18,7 +22,23 @@ cfn_manage stop-aurora-cluster --aurora-cluster-id [AURORA_CLUSTER_ID]
 
 cfn_manage start-aurora-cluster --aurora-cluster-id [AURORA_CLUSTER_ID]
 
-General options
+cfn_manage stop-ec2 --ec2-instance-id [EC2_INSTANCE_ID]
+
+cfn_manage start-ec2 --ec2-instance-id [EC2_INSTANCE_ID]
+
+cfn_manage stop-spot-fleet --spot-fleet [SPOT_FLEET]
+
+cfn_manage start-spot-fleet --spot-fleet [SPOT_FLEET]
+
+cfn_manage stop-ecs-cluster --ecs-cluster [ECS_CLUSTER]
+
+cfn_manage start-ecs-cluster --ecs-cluster [ECS_CLUSTER]
+
+cfn_manage disable-alarm --alarm [ALARM]
+
+cfn_manage enable-alarm --alarm [ALARM]
+
+General options:
 
 --source-bucket [BUCKET]
 
@@ -48,5 +68,15 @@ General options
 
     Applicable only to [start|stop-environment] commands. If there is problem with stopping a resource,
     (e.g. cloudformation stack not being synced or manual resource deletion) script will continue it's
-    operation. By defult script stops when there is problem with starting/stopping resource, and expects
+    operation. By default script stops when there is problem with starting/stopping resource, and expects
     manual intervention to fix the root cause for failure.
+
+--skip-wait
+
+    Skips waiting for resources to achieve stopped or started states.
+
+--wait-async
+
+  Default wait action is to wait for each individual resource to be stopped and started before continuing.
+  This will enabled waiting for resources in groups based on priority. Option only useful when used with
+  start-environment and stop-environment commands.

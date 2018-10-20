@@ -44,6 +44,8 @@ module Base2
           @cf_client = Aws::CloudFormation::Client.new(credentials: @credentials, retry_limit: 20)
         end
         @dry_run = (ENV.key?('DRY_RUN') and ENV['DRY_RUN'] == '1')
+        @skip_wait = (ENV.key?('SKIP_WAIT') and ENV['SKIP_WAIT'] == '1')
+        @wait_async = (ENV.key?('WAIT_ASYNC') and ENV['WAIT_ASYNC'] == '1')
         @continue_on_error = (ENV.key? 'CFN_CONTINUE_ON_ERROR' and ENV['CFN_CONTINUE_ON_ERROR'] == '1')
       rescue NoMethodError => e
         puts "Got No Method Error on CloudFormation::initialize, this often means that you're missing a AWS_DEFAULT_REGION"
@@ -71,92 +73,131 @@ module Base2
         $log.info("Environment #{stack_name} stopped")
       end
 
-      def start_stop_aurora_cluster(action,cluster_id)
+      def start_resource(resource_id,resource_type)
         start_stop_handler = Base2::StartStopHandlerFactory.get_start_stop_handler(
-            'AWS::RDS::DBCluster',
-            cluster_id
+            resource_type,
+            resource_id,
+            @skip_wait
         )
         @environment_resources << {
-            id: cluster_id,
-            priority: '100',
+            id: resource_id,
+            priority: @@resource_start_priorities[resource['resource_type']],
             handler: start_stop_handler,
-            type: 'AWS::RDS::DBCluster'
+            type: resource_type
         }
-        do_stop_assets if action == 'stop'
-        do_start_assets if action == 'start'
+        do_start_assets
       end
 
-      def start_stop_rds(action,instance_id)
+      def stop_resource(resource_id,resource_type)
         start_stop_handler = Base2::StartStopHandlerFactory.get_start_stop_handler(
-            'AWS::RDS::DBInstance',
-            instance_id
+            resource_type,
+            resource_id,
+            @skip_wait
         )
         @environment_resources << {
-            id: instance_id,
-            priority: '100',
+            id: resource_id,
+            priority: @@resource_start_priorities[resource['resource_type']],
             handler: start_stop_handler,
-            type: 'AWS::RDS::DBInstance'
+            type: resource_type
         }
-        do_stop_assets if action == 'stop'
-        do_start_assets if action == 'start'
+        do_stop_assets
       end
 
       def do_stop_assets
         # sort start resource by priority
         @environment_resources = @environment_resources.sort_by { |k| k[:priority] }.reverse
+        environment_resources_by_priority = @environment_resources.partition { |k| k[:priority] }
 
-        @environment_resources.each do |resource|
-          begin
-            $log.info("Stopping resource #{resource[:id]}")
-            # just print out information if running a dry run, otherwise start assets
-            if not @dry_run
-              configuration = resource[:handler].stop()
-              if configuration.class == Hash
-                s3_prefix = "environment_data/resource/#{resource[:id]}"
-                save_item_configuration(s3_prefix, configuration)
+        environment_resources_by_priority.each do |priority|
+          priority.each do |resource|
+            begin
+              $log.info("Stopping resource #{resource[:id]}")
+              # just print out information if running a dry run, otherwise start assets
+              if not @dry_run
+                configuration = resource[:handler].stop()
+                if configuration.class == Hash
+                  s3_prefix = "environment_data/resource/#{resource[:id]}"
+                  save_item_configuration(s3_prefix, configuration)
+                end
+              else
+                $log.info("Dry run enabled, skipping stop start\nFollowing resource would be stopped: #{resource[:id]}")
+                $log.debug("Resource type: #{resource[:type]}\n\n")
               end
-            else
-              $log.info("Dry run enabled, skipping stop start\nFollowing resource would be stopped: #{resource[:id]}")
-              $log.debug("Resource type: #{resource[:type]}\n\n")
-            end
-          rescue => e
-            $log.error("An exception occurred during stop operation against resource #{resource[:id]}")
-            $log.error("#{e.to_s}")
-            $log.error(e.backtrace.join("\n\t"))
-            if not @continue_on_error
-              raise e
+            rescue => e
+              $log.error("An exception occurred during stop operation against resource #{resource[:id]}")
+              $log.error("#{e.to_s}")
+              $log.error(e.backtrace.join("\n\t"))
+              if not @continue_on_error
+                raise e
+              end
             end
           end
+
+          if not @dry_run and @wait_async
+            priority.each do |resource|
+              begin
+                resource[:handler].wait('stopped')
+              rescue => e
+                $log.error("An exception occurred during wait operation against resource #{resource[:id]}")
+                $log.error("#{e.to_s}")
+                $log.error(e.backtrace.join("\n\t"))
+                if not @continue_on_error
+                  raise e
+                end
+              end
+            end
+          end
+
         end
       end
 
       def do_start_assets
         # sort start resource by priority
         @environment_resources = @environment_resources.sort_by { |k| k[:priority] }
+        environment_resources_by_priority = @environment_resources.partition { |k| k[:priority] }
 
-        @environment_resources.each do |resource|
-          begin
-            $log.info("Starting resource #{resource[:id]}")
-            # just print out information if running a dry run, otherwise start assets
-            if not @dry_run
-              # read configuration
-              s3_prefix = "environment_data/resource/#{resource[:id]}"
-              configuration = get_object_configuration(s3_prefix)
+        environment_resources_by_priority.each do |priority|
+          priority.each do |resource|
+            begin
+              $log.info("Starting resource #{resource[:id]}")
+              # just print out information if running a dry run, otherwise start assets
+              if not @dry_run
+                # read configuration
+                s3_prefix = "environment_data/resource/#{resource[:id]}"
+                configuration = get_object_configuration(s3_prefix)
 
-              # start
-              resource[:handler].start(configuration)
-            else
-              $log.info("Dry run enabled, skipping actual start\nFollowing resource would be started: #{resource[:id]}")
-              $log.debug("Resource type: #{resource[:type]}\n\n")
-            end
-          rescue => e
-              $log.error("An exception occurred during start operation against resource #{resource[:id]}")
-              $log.error("#{e.to_s}")
-              $log.error(e.backtrace.join("\n\t"))
-              if not @continue_on_error
-                raise e
+                # start
+                resource[:handler].start(configuration)
+              else
+                $log.info("Dry run enabled, skipping actual start\nFollowing resource would be started: #{resource[:id]}")
+                $log.debug("Resource type: #{resource[:type]}\n\n")
               end
+            rescue => e
+                $log.error("An exception occurred during start operation against resource #{resource[:id]}")
+                $log.error("#{e.to_s}")
+                $log.error(e.backtrace.join("\n\t"))
+                if not @continue_on_error
+                  raise e
+                end
+            end
           end
+
+          if not @dry_run and @wait_async
+            priority.each do |resource|
+              begin
+                resource[:handler].wait('available')
+              rescue => e
+                $log.error("An exception occurred during wait operation against resource #{resource[:id]}")
+                $log.error("#{e.to_s}")
+                $log.error(e.backtrace.join("\n\t"))
+                if not @continue_on_error
+                  raise e
+                end
+              end
+            end
+
+          end
+
         end
       end
 
@@ -167,7 +208,8 @@ module Base2
           begin
             start_stop_handler = Base2::StartStopHandlerFactory.get_start_stop_handler(
                 resource['resource_type'],
-                resource['physical_resource_id']
+                resource['physical_resource_id'],
+                @skip_wait
             )
           rescue Exception => e
             $log.error("Error creating start-stop handler for resource of type #{resource['resource_type']}" +

@@ -5,8 +5,25 @@ Base2Services Common Cloud Formation stacks functionality
 ## Installation
 
 - As a gem `gem install cfn_manage`
- 
-- Download source code `git clone https://github.com/base2Services/cfn_manage`
+
+- As a docker container `docker pull base2/cfn_manage`
+
+- Download source code `git clone https://github.com/base2Services/cfn-start-stop-stack`
+
+## Run As Docker Container
+
+Running cfn_manage inside a docker container means you don't have to worry about
+managing the runtime environment.
+
+```bash
+docker run -ti --rm -v $HOME/.aws/credentials:/root/.aws/credentials base2/cfn_manage
+```
+
+You can also pass in additional [Environment Variables](## Environment Variables) using the `-e` flag in the run command
+
+```bash
+docker run -ti --rm -v $HOME/.aws/credentials:/root/.aws/credentials -e AWS_REGION=us-east-1 base2/cfn_manage
+```
 
 ## Functionality
 
@@ -32,21 +49,21 @@ Start environment operation will
 - Enable CloudWatch Alarm actions
 Metadata about environment, such as number of desired/max/min instances within ASG and MultiAZ property
 for rds instances, is stored in S3 bucket specified via `--source-bucket` switch or `SOURCE_BUCKET` environment
-variable. 
+variable.
 
 Both start and stop environment operations are idempotent, so if you run `stop-environment`
-two times in a row, initial configuration of ASG will persist in S3 bucket (rather than storing 0/0/0) as ASG configuration. 
-Same applies for `start` operation - running it against already running environment won't perform any operations. 
+two times in a row, initial configuration of ASG will persist in S3 bucket (rather than storing 0/0/0) as ASG configuration.
+Same applies for `start` operation - running it against already running environment won't perform any operations.
 
 In case of some configuration data being lost, script will continue and work with existing data (e.g data about asgs
 removed from S3, but rds data persists will results in RDS instances being started)
 
-Order of operations is supported at this point as hardcoded weights per resource type. Pull Requests are welcome 
+Order of operations is supported at this point as hardcoded weights per resource type. Pull Requests are welcome
 for supporting dynamic discovery of order of execution - resource tags or local configuration file override are some of
-the possible sources. 
+the possible sources.
 
 
-## Start - stop cloudformation stack 
+## Start - stop cloudformation stack
 
 ### Supported resources
 
@@ -65,12 +82,12 @@ the possible sources.
 
 #### AWS::RDS::DBInstance
 
-**Stop** operation will stop rds instance. Aurora is not supported yet on AWS side. Note that RDS instance can be stopped 
+**Stop** operation will stop rds instance. Aurora is not supported yet on AWS side. Note that RDS instance can be stopped
 for two weeks at maximum. If instance is Multi-AZ, it will get converted to Single-AZ instance, before being stopped
 (Amazon does not support stopping Multi-AZ rds instances)
 
 
-**Start** operation will start rds instance. If instance was running in Multi-AZ mode before being stopped, 
+**Start** operation will start rds instance. If instance was running in Multi-AZ mode before being stopped,
 it will get converted to Multi-AZ prior being started
 
 #### AWS::CloudWatch::Alarm
@@ -87,12 +104,16 @@ it will get converted to Multi-AZ prior being started
 
 ## CLI usage
 
-You'll find usage of `cfn_manage` within `usage.txt` file
+You'll find usage of `cfn_manage` within [usage.txt](bin/usage.txt) file
 
 ```
 Usage: cfn_manage [command] [options]
 
 Commands:
+
+cfn_manage help
+
+cfn_manage version
 
 cfn_manage stop-environment --stack-name [STACK_NAME]
 
@@ -106,17 +127,36 @@ cfn_manage stop-rds --rds-instance-id [RDS_INSTANCE_ID]
 
 cfn_manage start-rds --rds-instance-id [RDS_INSTANCE_ID]
 
+cfn_manage stop-aurora-cluster --aurora-cluster-id [AURORA_CLUSTER_ID]
 
-General options
+cfn_manage start-aurora-cluster --aurora-cluster-id [AURORA_CLUSTER_ID]
+
+cfn_manage stop-ec2 --ec2-instance-id [EC2_INSTANCE_ID]
+
+cfn_manage start-ec2 --ec2-instance-id [EC2_INSTANCE_ID]
+
+cfn_manage stop-spot-fleet --spot-fleet [SPOT_FLEET]
+
+cfn_manage start-spot-fleet --spot-fleet [SPOT_FLEET]
+
+cfn_manage stop-ecs-cluster --ecs-cluster [ECS_CLUSTER]
+
+cfn_manage start-ecs-cluster --ecs-cluster [ECS_CLUSTER]
+
+cfn_manage disable-alarm --alarm [ALARM]
+
+cfn_manage enable-alarm --alarm [ALARM]
+
+General options:
 
 --source-bucket [BUCKET]
 
-    Bucket used to store / pull information from
+    Pucket used to store / pull information from
 
 --aws-role [ROLE_ARN]
 
-    AWS Role to assume when performing start/stop operations.
-    Reading and writing to source bucket is not done using this role. 
+    AWS Role to assume when performing operations. Any reads and
+    write to source bucket will be performed outside of this role
 
 
 -r [AWS_REGION], --region [AWS_REGION]
@@ -136,11 +176,23 @@ General options
 --continue-on-error
 
     Applicable only to [start|stop-environment] commands. If there is problem with stopping a resource,
-    (e.g. cloudformation stack not being synced or manual resource deletion) script will continue it's 
-    operation. By defult script stops when there is problem with starting/stopping resource, and expects
-    manual intervention to fix the root cause for failure. 
+    (e.g. cloudformation stack not being synced or manual resource deletion) script will continue it's
+    operation. By default script stops when there is problem with starting/stopping resource, and expects
+    manual intervention to fix the root cause for failure.
+
+--skip-wait
+
+    Skips waiting for resources to achieve stopped or started states.
+
+--wait-async
+
+  Default wait action is to wait for each individual resource to be stopped and started before continuing.
+  This will enabled waiting for resources in groups based on priority. Option only useful when used with
+  start-environment and stop-environment commands.
 
 ```
+
+## Environment Variables
 
 Also, there are some environment variables that control behaviour of the application.
 There are command line switch counter parts for all of the
@@ -160,4 +212,4 @@ There are command line switch counter parts for all of the
  - Bump up version `gem install bump && bump [patch|minor|major]`
  - Update timestamp in `cfn_manage.gemspec`
  - Create and publish gem `gem build cfn_manage.gemspec && gem push cfn_manage-$VERSION.gem`
- - Create release page on GitHub 
+ - Create release page on GitHub
