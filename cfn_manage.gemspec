@@ -20,4 +20,5 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'aws-sdk-cloudwatch', '~> 1', '<2'
   s.add_runtime_dependency 'aws-sdk-iam', '~> 1', '<2'
   s.add_runtime_dependency 'aws-sdk-autoscaling', '~> 1', '<2'
+  s.add_runtime_dependency 'aws-sdk-ecs', '~> 1', '<2'
 end

@@ -5,6 +5,7 @@ require 'aws-sdk-cloudformation'
 require 'aws-sdk-rds'
 require 'aws-sdk-cloudwatch'
 require 'aws-sdk-autoscaling'
+require 'aws-sdk-ecs'
 
 require_relative '../lib/cf_common'
 require_relative '../lib/aws_credentials'
@@ -29,6 +30,7 @@ module Base2
           'AWS::AutoScaling::AutoScalingGroup' => '200',
           'AWS::EC2::Instance' => '200',
           'AWS::EC2::SpotFleet' => '200',
+          'AWS::ECS::Cluster' => '250',
           'AWS::CloudWatch::Alarm' => '300'
       }
 
