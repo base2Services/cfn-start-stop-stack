@@ -1,1 +1,8 @@
 # Created by .ignore support plugin (hsz.mobi)
+Gemfile.lock
+*.gem
+release.sh
+
+.DS_Store
+
+coverage/
