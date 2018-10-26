@@ -1,5 +1,9 @@
 # cfn-library
 
+[![Build Status](https://travis-ci.org/base2Services/cfn-start-stop-stack.svg?branch=develop)](https://travis-ci.org/base2Services/cfn-start-stop-stack)
+
+## About
+
 Base2Services Common Cloud Formation stacks functionality
 
 ## Installation

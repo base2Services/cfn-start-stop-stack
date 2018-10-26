@@ -1,4 +1,4 @@
-module Base2
+module CfnManage
 
   module CloudFormation
 

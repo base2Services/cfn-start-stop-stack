@@ -1,13 +1,13 @@
-require_relative '../lib/aws_credentials'
+require 'cfn_manage/aws_credentials'
 
-module Base2
+module CfnManage
 
   class SpotFleetStartStopHandler
 
     def initialize(fleet_id, skip_wait)
       @fleet_id = fleet_id
       @skip_wait = skip_wait
-      credentials = Base2::AWSCredentials.get_session_credentials("startstopfleet_#{fleet_id}")
+      credentials = CfnManage::AWSCredentials.get_session_credentials("startstopfleet_#{fleet_id}")
       @ec2_client = Aws::EC2::Client.new(retry_limit: 20)
       if credentials != nil
         @ec2_client = Aws::EC2::Client.new(credentials: credentials, retry_limit: 20)

@@ -1,7 +1,7 @@
 require 'aws-sdk-cloudformation'
-require_relative './cf_common'
+require 'cfn_manage/cf_common'
 
-module Base2
+module CfnManage
   module CloudFormation
     class ProgressTracker
       @cf_client = nil
@@ -34,17 +34,17 @@ module Base2
         @period_from = period_from
       end
 
-       
+
       def track_single_stack(stack)
         stack_id = stack['stack_id']
         # Default to period_from if first run, take from last run otherwise
         event_from = last_event_times[stack_id] if @last_event_times.key?(stack_id)
         event_from = @period_from unless @last_event_times.key?(stack_id)
-        
+
 
         stack_resources = @cf_client.describe_stack_events(stack_name: stack['stack_id'],)
-        
-        
+
+
       end
 
       def track_progress(_show_only_failures = false)

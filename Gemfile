@@ -1,4 +1,9 @@
 source 'https://rubygems.org'
 
-gem 'aws-sdk','>= 3', '<4'
+gemspec
 
+group :test do
+  gem 'rake'
+  gem 'rspec'
+  gem 'simplecov'
+end

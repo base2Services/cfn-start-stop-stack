@@ -1,6 +1,6 @@
-require_relative '../lib/aws_credentials'
+require 'cfn_manage/aws_credentials'
 
-module Base2
+module CfnManage
 
   class RdsStartStopHandler
 
@@ -8,7 +8,7 @@ module Base2
       @instance_id = instance_id
       @skip_wait = skip_wait
       @excluded_engines = %w(aurora aurora-mysql aurora-postgresql) # RDS list of exluded engines that don't support RDS stop start
-      credentials = Base2::AWSCredentials.get_session_credentials("startstoprds_#{instance_id}")
+      credentials = CfnManage::AWSCredentials.get_session_credentials("startstoprds_#{instance_id}")
       @rds_client = Aws::RDS::Client.new(retry_limit: 20)
       if credentials != nil
         @rds_client = Aws::RDS::Client.new(credentials: credentials, retry_limit: 20)

@@ -1,12 +1,12 @@
-require_relative '../lib/aws_credentials'
+require 'cfn_manage/aws_credentials'
 
-module Base2
+module CfnManage
 
   class AlarmStartStopHandler
 
     def initialize(alarm_name)
       @alarm_id = alarm_name
-      credentials = Base2::AWSCredentials.get_session_credentials("startstopalarm_#{@asg_name}")
+      credentials = CfnManage::AWSCredentials.get_session_credentials("startstopalarm_#{@asg_name}")
       @cwclient = Aws::CloudWatch::Client.new(retry_limit: 20)
       if credentials != nil
         @cwclient = Aws::CloudWatch::Client.new(credentials: credentials, retry_limit: 20)
