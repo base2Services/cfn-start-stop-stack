@@ -7,13 +7,13 @@ require 'aws-sdk-cloudwatch'
 require 'aws-sdk-autoscaling'
 require 'aws-sdk-ecs'
 
-require_relative '../lib/cf_common'
-require_relative '../lib/aws_credentials'
+require 'cfn_manage/cf_common'
+require 'cfn_manage/aws_credentials'
 require 'json'
 require 'yaml'
-require_relative '../lib/start_stop_handler_factory'
+require 'cfn_manage/start_stop_handler_factory'
 
-module Base2
+module CfnManage
   module CloudFormation
     class EnvironmentRunStop
 
@@ -39,7 +39,7 @@ module Base2
         @s3_client = Aws::S3::Client.new(retry_limit: 20)
         @s3_bucket = ENV['SOURCE_BUCKET']
         @cf_client = Aws::CloudFormation::Client.new(retry_limit: 20)
-        @credentials = Base2::AWSCredentials.get_session_credentials('start_stop_environment')
+        @credentials = CfnManage::AWSCredentials.get_session_credentials('start_stop_environment')
         if not @credentials.nil?
           @cf_client = Aws::CloudFormation::Client.new(credentials: @credentials, retry_limit: 20)
         end
@@ -74,7 +74,7 @@ module Base2
       end
 
       def start_resource(resource_id,resource_type)
-        start_stop_handler = Base2::StartStopHandlerFactory.get_start_stop_handler(
+        start_stop_handler = CfnManage::StartStopHandlerFactory.get_start_stop_handler(
             resource_type,
             resource_id,
             @skip_wait
@@ -89,7 +89,7 @@ module Base2
       end
 
       def stop_resource(resource_id,resource_type)
-        start_stop_handler = Base2::StartStopHandlerFactory.get_start_stop_handler(
+        start_stop_handler = CfnManage::StartStopHandlerFactory.get_start_stop_handler(
             resource_type,
             resource_id,
             @skip_wait
@@ -206,7 +206,7 @@ module Base2
         resrouces['stack_resources'].each do |resource|
           start_stop_handler = nil
           begin
-            start_stop_handler = Base2::StartStopHandlerFactory.get_start_stop_handler(
+            start_stop_handler = CfnManage::StartStopHandlerFactory.get_start_stop_handler(
                 resource['resource_type'],
                 resource['physical_resource_id'],
                 @skip_wait

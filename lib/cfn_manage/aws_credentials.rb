@@ -1,6 +1,6 @@
 require 'aws-sdk-core'
 
-module Base2
+module CfnManage
 
   class AWSCredentials
 

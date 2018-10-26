@@ -1,13 +1,13 @@
-require_relative '../lib/aws_credentials'
+require 'cfn_manage/aws_credentials'
 
-module Base2
+module CfnManage
 
   class AsgStartStopHandler
 
     def initialize(asg_id, skip_wait)
       @asg_name = asg_id
       @skip_wait = skip_wait
-      credentials = Base2::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
+      credentials = CfnManage::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
       @asg_client = Aws::AutoScaling::Client.new(retry_limit: 20)
       if credentials != nil
         @asg_client = Aws::AutoScaling::Client.new(credentials: credentials, retry_limit: 20)

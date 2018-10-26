@@ -1,13 +1,13 @@
-require_relative '../lib/aws_credentials'
+require 'cfn_manage/aws_credentials'
 
-module Base2
+module CfnManage
 
   class AuroraClusterStartStopHandler
 
     def initialize(cluster_id, skip_wait)
       @cluster_id = cluster_id
       @skip_wait = skip_wait
-      credentials = Base2::AWSCredentials.get_session_credentials("startstopcluster_#{cluster_id}")
+      credentials = CfnManage::AWSCredentials.get_session_credentials("startstopcluster_#{cluster_id}")
       @rds_client = Aws::RDS::Client.new(retry_limit: 20)
       if credentials != nil
         @rds_client = Aws::RDS::Client.new(credentials: credentials, retry_limit: 20)
