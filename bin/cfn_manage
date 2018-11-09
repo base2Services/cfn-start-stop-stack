@@ -91,8 +91,12 @@ OptionParser.new do |opts|
     ENV['SKIP_WAIT'] = '1'
   end
 
-  opts.on('--skip_wait') do
+  opts.on('--skip-wait') do
     ENV['SKIP_WAIT'] = '1'
+  end
+
+  opts.on('--ignore-missing-ecs-config') do
+    ENV['IGNORE_MISSING_ECS_CONFIG'] = '1'
   end
 
 end.parse!

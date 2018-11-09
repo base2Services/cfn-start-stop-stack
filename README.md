@@ -194,6 +194,9 @@ General options:
   This will enabled waiting for resources in groups based on priority. Option only useful when used with
   start-environment and stop-environment commands.
 
+--ignore-missing-ecs-config
+
+    This option is required for starting a ecs service that was stopped outside of cfn_manage.
 ```
 
 ## Environment Variables
@@ -210,6 +213,8 @@ There are command line switch counter parts for all of the
 `SOURCE_BUCKET` as env var or `--source-bucket` as CLI switch
 
 `DRY_RUN` as env var (set to '1' to enable) or `--dry-run` as CLI switch
+
+`IGNORE_MISSING_ECS_CONFIG` as env var (set to '1' to enable) or `--ignore-missing-ecs-config` as CLI switch
 
 ## Release process
 

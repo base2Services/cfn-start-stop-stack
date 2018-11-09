@@ -77,6 +77,10 @@ General options:
 
 --wait-async
 
-  Default wait action is to wait for each individual resource to be stopped and started before continuing.
-  This will enabled waiting for resources in groups based on priority. Option only useful when used with
-  start-environment and stop-environment commands.
+    Default wait action is to wait for each individual resource to be stopped and started before continuing.
+    This will enabled waiting for resources in groups based on priority. Option only useful when used with
+    start-environment and stop-environment commands.
+
+--ignore-missing-ecs-config
+
+    This option is required for starting a ecs service that was stopped outside of cfn_manage.
