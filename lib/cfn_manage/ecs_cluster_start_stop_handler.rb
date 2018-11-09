@@ -10,6 +10,7 @@ module CfnManage
       $log.info("Found #{@services.count} services in ECS cluster #{cluster_id}")
       @cluster = cluster_id
       @skip_wait = skip_wait
+      @ignore_missing_ecs_config = (ENV.key? 'IGNORE_MISSING_ECS_CONFIG' and ENV['IGNORE_MISSING_ECS_CONFIG'] == '1')
     end
 
     def start(configuration)
@@ -23,9 +24,19 @@ module CfnManage
           next
         end
 
-        $log.info("Starting ECS service #{service.service_name} with desired count of #{configuration[service.service_name]['desired_count']}")
+        if configuration.has_key?(service.service_name)
+          desired_count = configuration[service.service_name]['desired_count']
+        elsif @ignore_missing_ecs_config
+          $log.info("ECS service #{service.service_name} wasn't previosly stopped by cfn_manage. Option --ignore-missing-ecs-config set and setting desired count to 1")
+          desired_count = 1
+        else
+          $log.warn("ECS service #{service.service_name} wasn't previosly stopped by cfn_manage. Skipping ...")
+          next
+        end
+
+        $log.info("Starting ECS service #{service.service_name} with desired count of #{desired_count}")
         @ecs_client.update_service({
-          desired_count: configuration[service.service_name]['desired_count'],
+          desired_count: desired_count,
           service: service_arn,
           cluster: @cluster
         })
@@ -55,7 +66,7 @@ module CfnManage
 
       end
 
-      return configuration
+      return configuration.empty? ? nil : configuration
     end
 
     def wait(completed_status)
