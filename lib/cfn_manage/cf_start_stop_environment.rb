@@ -81,7 +81,7 @@ module CfnManage
         )
         @environment_resources << {
             id: resource_id,
-            priority: @@resource_start_priorities[resource['resource_type']],
+            priority: @@resource_start_priorities[resource_type],
             handler: start_stop_handler,
             type: resource_type
         }
@@ -96,7 +96,7 @@ module CfnManage
         )
         @environment_resources << {
             id: resource_id,
-            priority: @@resource_start_priorities[resource['resource_type']],
+            priority: @@resource_start_priorities[resource_type],
             handler: start_stop_handler,
             type: resource_type
         }
