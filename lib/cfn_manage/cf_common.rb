@@ -16,9 +16,10 @@ module CfnManage
 
         stack_resources['stack_resources'].each do |resource|
           # test if resource us substack
-          unless (resource['physical_resource_id'] =~ /arn:aws:cloudformation:(.*):stack\/(.*)/).nil?
+          if resource['resource_type'] == 'AWS::CloudFormation::Stack'
             # call recursively
-            self.visit_stack(cf_client, resource['physical_resource_id'], handler, visit_substacks)
+            substack_name = resource['physical_resource_id'].split('/')[1]
+            self.visit_stack(cf_client, substack_name, handler, visit_substacks)
           end
         end
       end
