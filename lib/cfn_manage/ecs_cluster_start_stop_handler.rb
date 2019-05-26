@@ -7,7 +7,7 @@ module CfnManage
       credentials = CfnManage::AWSCredentials.get_session_credentials("stoprun_#{cluster_id}")
       @ecs_client = Aws::ECS::Client.new(credentials: credentials, retry_limit: 20)
       @services = []
-      @ecs_client.list_services(cluster: cluster_id, max_results: 100).each do |results|
+      @ecs_client.list_services(cluster: cluster_id, scheduling_strategy: 'REPLICA', max_results: 100).each do |results|
         @services.push(*results.service_arns)
       end
       $log.info("Found #{@services.count} services in ECS cluster #{cluster_id}")
