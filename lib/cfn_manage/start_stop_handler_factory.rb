@@ -5,6 +5,7 @@ require 'cfn_manage/aurora_cluster_start_stop_handler'
 require 'cfn_manage/alarm_start_stop_handler'
 require 'cfn_manage/spot_fleet_start_stop_handler'
 require 'cfn_manage/ecs_cluster_start_stop_handler'
+require 'cfn_manage/documentdb_cluster_start_stop_handler'
 
 module CfnManage
 
@@ -26,6 +27,9 @@ module CfnManage
 
         when 'AWS::RDS::DBCluster'
           return CfnManage::AuroraClusterStartStopHandler.new(resource_id, skip_wait)
+
+        when 'AWS::DocDB::DBCluster'
+          return CfnManage::DocumentDbClusterStartStopHandler.new(resource_id, skip_wait)
 
         when 'AWS::CloudWatch::Alarm'
           return CfnManage::AlarmStartStopHandler.new(resource_id)
