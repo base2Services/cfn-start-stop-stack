@@ -7,10 +7,13 @@ module CfnManage
     def initialize(asg_id, skip_wait)
       @asg_name = asg_id
       @skip_wait = skip_wait
+      @asg_suspend_termination = (ENV.key?('ASG_SUSPEND_TERMINATION') and ENV['ASG_SUSPEND_TERMINATION'] == '1')
       credentials = CfnManage::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
       @asg_client = Aws::AutoScaling::Client.new(retry_limit: 20)
+      @ec2_client = Aws::EC2::Client.new(retry_limit: 20)
       if credentials != nil
         @asg_client = Aws::AutoScaling::Client.new(credentials: credentials, retry_limit: 20)
+        @ec2_client = Aws::EC2::Client.new(credentials: credentials, retry_limit: 20)
       end
 
       asg_details = @asg_client.describe_auto_scaling_groups(
@@ -29,23 +32,59 @@ module CfnManage
         # nil and false configurations are not saved
         return nil
       else
-        # store asg configuration to S3
-        configuration = {
+
+        puts @asg.auto_scaling_group_name
+
+        unless @asg_suspend_termination 
+          # store asg configuration to S3
+          configuration = {
+              desired_capacity: @asg.desired_capacity,
+              min_size: @asg.min_size,
+              max_size: @asg.max_size
+          }
+
+          $log.info("Setting desired capacity to 0/0/0 for ASG #{@asg.auto_scaling_group_name}A")
+
+          puts @asg.auto_scaling_group_name
+          @asg_client.update_auto_scaling_group({
+              auto_scaling_group_name: "#{@asg.auto_scaling_group_name}",
+              min_size: 0,
+              max_size: 0,
+              desired_capacity: 0
+          })
+          return configuration
+        else
+
+          configuration = {
             desired_capacity: @asg.desired_capacity,
             min_size: @asg.min_size,
-            max_size: @asg.max_size
-        }
+            max_size: @asg.max_size,
+            suspended_processes: @asg.suspended_processes
+          }
 
-        $log.info("Setting desired capacity to 0/0/0 for ASG #{@asg.auto_scaling_group_name}A")
-        # set asg configuration to 0/0/0
-        puts @asg.auto_scaling_group_name
-        @asg_client.update_auto_scaling_group({
+          $log.info("Suspending processes for ASG #{@asg.auto_scaling_group_name}A")
+
+          @asg_client.suspend_processes({
             auto_scaling_group_name: "#{@asg.auto_scaling_group_name}",
-            min_size: 0,
-            max_size: 0,
-            desired_capacity: 0
-        })
-        return configuration
+          })
+
+          $log.info("Stopping all instances in ASG #{@asg.auto_scaling_group_name}A")
+
+          @asg.instances.each do |instance|
+            @instance_id = instance.instance_id
+            @instance = Aws::EC2::Resource.new(client: @ec2_client, retry_limit: 20).instance(@instance_id)
+
+            if %w(stopped stopping).include?(@instance.state.name)
+              $log.info("Instance #{@instance_id} already stopping or stopped")
+              return
+            end
+
+            $log.info("Stopping instance #{@instance_id}")
+            @instance.stop()
+          end
+
+          return configuration
+
       end
 
     end
@@ -57,13 +96,44 @@ module CfnManage
       end
       $log.info("Starting ASG #{@asg_name} with following configuration\n#{configuration}")
 
-      # restore asg sizes
-      @asg_client.update_auto_scaling_group({
+      unless @asg_suspend_termination 
+        # restore asg sizes
+        @asg_client.update_auto_scaling_group({
           auto_scaling_group_name: @asg_name,
           min_size: configuration['min_size'],
           max_size: configuration['max_size'],
           desired_capacity: configuration['desired_capacity']
-      })
+        })
+      else
+        $log.info("Resuming all processes for ASG #{@asg_name}")
+
+        @asg_client.resume_processes({
+          auto_scaling_group_name: "#{@asg.auto_scaling_group_name}",
+        })
+
+        $log.info("Suspending processes stored in configuration for ASG #{@asg_name}")
+
+        if configuration['suspended_processes'].any?
+          @asg_client.suspend_processes({
+            auto_scaling_group_name: "#{@asg.auto_scaling_group_name}",
+            scaling_processes: configuration['suspended_processes'],
+          })
+        end
+
+        $log.info("ASG #{@asg_name} configuration back in original state, starting instances...")
+
+        @asg.instances.each do |instance|
+          @instance_id = instance.instance_id
+          @instance = Aws::EC2::Resource.new(client: @ec2_client, retry_limit: 20).instance(@instance_id)
+
+          if %w(running).include?(@instance.state.name)
+            $log.info("Instance #{@instance_id} already running")
+            return
+          end
+          $log.info("Starting instance #{@instance_id}")
+          @instance.start()
+        end
+
     end
 
     def wait(wait_states=[])

@@ -84,3 +84,7 @@ General options:
 --ignore-missing-ecs-config
 
     This option is required for starting a ecs service that was stopped outside of cfn_manage.
+
+--asg-suspend-termination
+
+    Will stop instances in the autoscaling group(s) instead of the default behaviour of termination.

@@ -99,6 +99,12 @@ OptionParser.new do |opts|
     ENV['IGNORE_MISSING_ECS_CONFIG'] = '1'
   end
 
+  opts.on('--asg-suspend-termination') do
+    ENV['ASG_SUSPEND_TERMINATION'] = '1'
+  end
+
+end
+
 end.parse!
 
 command = ARGV[0]
