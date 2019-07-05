@@ -14,12 +14,16 @@ module CfnManage
       end
       rds = Aws::RDS::Resource.new(client: @rds_client)
       @rds_cluster = rds.db_cluster(cluster_id)
-
     end
 
     def start(configuration)
       if @rds_cluster.status == 'available'
         $log.info("Aurora Cluster #{@cluster_id} is already in available state")
+        return
+      end
+
+      if @rds_cluster.engine_mode != 'provisioned'
+        $log.info("Aurora Cluster #{@cluster_id} is not a provisioned cluster and cannot be started using this method.")
         return
       end
 
@@ -45,6 +49,11 @@ module CfnManage
 
       if @rds_cluster.status != 'available'
         $log.info("Aurora Cluster #{@cluster_id} is not in a available state. State: #{@rds_cluster.status}")
+        return {}
+      end
+
+      if @rds_cluster.engine_mode != 'provisioned'
+        $log.info("Aurora Cluster #{@cluster_id} is not a provisioned cluster and cannot be stopped using this method.")
         return {}
       end
       # stop rds cluster and wait for it to be fully stopped

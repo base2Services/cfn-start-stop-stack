@@ -54,6 +54,10 @@ OptionParser.new do |opts|
     $options['AURORA_CLUSTER_ID'] = cluster
   end
 
+  opts.on('--docdb-cluster-id [DOCDB_CLUSTER_ID]') do |cluster|
+    $options['DOCDB_CLUSTER_ID'] = cluster
+  end
+
   opts.on('--ec2-instance-id [EC2_INSTANCE_ID]') do |ec2|
     $options['EC2_INSTANCE_ID'] = ec2
   end
@@ -134,6 +138,12 @@ case command
     CfnManage::CloudFormation::EnvironmentRunStop.new().stop_resource($options['AURORA_CLUSTER_ID'],'AWS::RDS::DBCluster')
   when 'start-aurora-cluster'
     CfnManage::CloudFormation::EnvironmentRunStop.new().start_resource($options['AURORA_CLUSTER_ID'],'AWS::RDS::DBCluster')
+
+  # docdb cluster commands
+  when 'stop-docdb-cluster'
+    CfnManage::CloudFormation::EnvironmentRunStop.new().stop_resource($options['DOCDB_CLUSTER_ID'],'AWS::DocDB::DBCluster')
+  when 'start-docdb-cluster'
+    CfnManage::CloudFormation::EnvironmentRunStop.new().start_resource($options['DOCDB_CLUSTER_ID'],'AWS::DocDB::DBCluster')
 
   # ec2 instance
   when 'stop-ec2'
