@@ -6,6 +6,7 @@ require 'aws-sdk-rds'
 require 'aws-sdk-cloudwatch'
 require 'aws-sdk-autoscaling'
 require 'aws-sdk-ecs'
+require 'aws-sdk-docdb'
 
 require 'cfn_manage/cf_common'
 require 'cfn_manage/aws_credentials'
@@ -27,6 +28,7 @@ module CfnManage
       @@resource_start_priorities = {
           'AWS::RDS::DBInstance' => '100',
           'AWS::RDS::DBCluster' => '100',
+          'AWS::DocDB::DBCluster' => '100',
           'AWS::AutoScaling::AutoScalingGroup' => '200',
           'AWS::EC2::Instance' => '200',
           'AWS::EC2::SpotFleet' => '200',

@@ -94,6 +94,13 @@ for two weeks at maximum. If instance is Multi-AZ, it will get converted to Sing
 **Start** operation will start rds instance. If instance was running in Multi-AZ mode before being stopped,
 it will get converted to Multi-AZ prior being started
 
+#### AWS::DocDB::DBCluster
+
+**Stop** Cluster will be stopped, note that a cluster can only be stopped for a maximum of 7 days, after this time it will turn back on.
+
+
+**Start** Cluster will be started
+
 #### AWS::CloudWatch::Alarm
 
 **Stop** operation will disable all of alarm's actions
@@ -134,6 +141,10 @@ cfn_manage start-rds --rds-instance-id [RDS_INSTANCE_ID]
 cfn_manage stop-aurora-cluster --aurora-cluster-id [AURORA_CLUSTER_ID]
 
 cfn_manage start-aurora-cluster --aurora-cluster-id [AURORA_CLUSTER_ID]
+
+cfn_manage stop-docdb-cluster --docdb-cluster-id [DOCDB_CLUSTER_ID]
+
+cfn_manage start-docdb-cluster --docdb-cluster-id [DOCDB_CLUSTER_ID]
 
 cfn_manage stop-ec2 --ec2-instance-id [EC2_INSTANCE_ID]
 

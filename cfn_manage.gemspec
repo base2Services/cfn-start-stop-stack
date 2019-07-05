@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.license       = 'MIT'
   spec.executables << 'cfn_manage'
 
-  spec.add_runtime_dependency 'aws-sdk-core', '~> 3','<4'
+  spec.add_runtime_dependency 'aws-sdk-core', '>=3.39.0','<4'
   spec.add_runtime_dependency 'aws-sdk-s3', '~> 1', '<2'
   spec.add_runtime_dependency 'aws-sdk-ec2', '~> 1', '<2'
   spec.add_runtime_dependency 'aws-sdk-cloudformation', '~> 1', '<2'
@@ -25,6 +25,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'aws-sdk-iam', '~> 1', '<2'
   spec.add_runtime_dependency 'aws-sdk-autoscaling', '~> 1', '<2'
   spec.add_runtime_dependency 'aws-sdk-ecs', '~> 1', '<2'
+  spec.add_runtime_dependency 'aws-sdk-docdb', '>=1.9.0', '<2'
 
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "rake", "~> 10.0"
