@@ -10,7 +10,7 @@ Base2Services Common Cloud Formation stacks functionality
 
 - As a gem `gem install cfn_manage`
 
-- As a docker container `docker pull base2/cfn_manage`
+- As a docker container `docker pull base2/cfn-manage`
 
 - Download source code `git clone https://github.com/base2Services/cfn-start-stop-stack`
 
@@ -20,13 +20,13 @@ Running cfn_manage inside a docker container means you don't have to worry about
 managing the runtime environment.
 
 ```bash
-docker run -ti --rm -v $HOME/.aws/credentials:/root/.aws/credentials base2/cfn_manage
+docker run -ti --rm -v $HOME/.aws/credentials:/root/.aws/credentials base2/cfn-manage
 ```
 
 You can also pass in additional [Environment Variables](## Environment Variables) using the `-e` flag in the run command
 
 ```bash
-docker run -ti --rm -v $HOME/.aws/credentials:/root/.aws/credentials -e AWS_REGION=us-east-1 base2/cfn_manage
+docker run -ti --rm -v $HOME/.aws/credentials:/root/.aws/credentials -e AWS_REGION=us-east-1 base2/cfn-manage
 ```
 
 ## Functionality
@@ -208,6 +208,10 @@ General options:
 --ignore-missing-ecs-config
 
     This option is required for starting a ecs service that was stopped outside of cfn_manage.
+
+--asg-suspend-termination
+
+    Will stop instances in the autoscaling group(s) instead of the default behaviour of termination.
 ```
 
 ## Environment Variables
