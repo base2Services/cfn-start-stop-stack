@@ -85,6 +85,8 @@ module CfnManage
 
           return configuration
 
+        end
+
       end
 
     end
@@ -105,22 +107,8 @@ module CfnManage
           desired_capacity: configuration['desired_capacity']
         })
       else
-        $log.info("Resuming all processes for ASG #{@asg_name}")
 
-        @asg_client.resume_processes({
-          auto_scaling_group_name: "#{@asg.auto_scaling_group_name}",
-        })
-
-        $log.info("Suspending processes stored in configuration for ASG #{@asg_name}")
-
-        if configuration['suspended_processes'].any?
-          @asg_client.suspend_processes({
-            auto_scaling_group_name: "#{@asg.auto_scaling_group_name}",
-            scaling_processes: configuration['suspended_processes'],
-          })
-        end
-
-        $log.info("ASG #{@asg_name} configuration back in original state, starting instances...")
+        $log.info("Starting instances for ASG #{@asg_name}...")
 
         @asg.instances.each do |instance|
           @instance_id = instance.instance_id
@@ -133,6 +121,54 @@ module CfnManage
           $log.info("Starting instance #{@instance_id}")
           @instance.start()
         end
+
+        unhealthy = true
+
+        $log.info("Checking health status for instances for ASG #{@asg_name}")
+
+        while unhealthy do
+          
+          asg_curr_details = @asg_client.describe_auto_scaling_groups(
+            auto_scaling_group_names: [@asg_name]
+          )
+          @asg_status = asg_curr_details.auto_scaling_groups[0]
+
+          allHealthy = 0
+
+          @asg_status.instances.each do |instance|
+            @instance_health = instance.health_status
+            if @instance_health == "Healthy"
+              allHealthy += 1
+            else
+              $log.info("Instance #{instance.instance_id} not currently healthy...")
+            end
+          end
+
+          if allHealthy == @asg_status.instances.length
+            $log.info("All instances healthy in ASG #{@asg_name}")
+            unhealthy = false
+            break
+          end
+
+        end
+
+        $log.info("Resuming all processes for ASG #{@asg_name}")
+
+        @asg_client.resume_processes({
+          auto_scaling_group_name: "#{@asg.auto_scaling_group_name}",
+        })
+
+        if configuration['suspended_processes'].any?
+
+          $log.info("Suspending processes stored in configuration for ASG #{@asg_name}")
+
+          @asg_client.suspend_processes({
+            auto_scaling_group_name: "#{@asg.auto_scaling_group_name}",
+            scaling_processes: configuration['suspended_processes'],
+          })
+        end
+
+      end
 
     end
 

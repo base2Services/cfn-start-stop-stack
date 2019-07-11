@@ -107,8 +107,6 @@ OptionParser.new do |opts|
     ENV['ASG_SUSPEND_TERMINATION'] = '1'
   end
 
-end
-
 end.parse!
 
 command = ARGV[0]
