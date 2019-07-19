@@ -39,6 +39,9 @@ module CfnManage
 
         when 'AWS::ECS::Cluster'
           return CfnManage::EcsClusterStartStopHandler.new(resource_id, skip_wait)
+          
+        when 'AWS::Transfer::Server'
+          return CfnManage::TransferStartStopHandler.new(resource_id, skip_wait)
 
         else
           return nil
