@@ -141,6 +141,7 @@ module CfnManage
               allHealthy += 1
             else
               $log.info("Instance #{instance.instance_id} not currently healthy...")
+              sleep(15)
             end
           end
 
