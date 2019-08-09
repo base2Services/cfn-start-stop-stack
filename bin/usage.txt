@@ -26,6 +26,10 @@ cfn_manage stop-docdb-cluster --docdb-cluster-id [DOCDB_CLUSTER_ID]
 
 cfn_manage start-docdb-cluster --docdb-cluster-id [DOCDB_CLUSTER_ID]
 
+cfn_manage stop-transfer-server --transfer-server-id [TRANSFER_SERVER_ID]
+
+cfn_manage start-transfer-server --transfer-server-id [TRANSFER_SERVER_ID]
+
 cfn_manage stop-ec2 --ec2-instance-id [EC2_INSTANCE_ID]
 
 cfn_manage start-ec2 --ec2-instance-id [EC2_INSTANCE_ID]
