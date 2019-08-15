@@ -159,7 +159,7 @@ module CfnManage
           auto_scaling_group_name: "#{@asg.auto_scaling_group_name}",
         })
 
-        if configuration['suspended_processes'].any?
+        if configuration.key?(:suspended_processes)
 
           $log.info("Suspending processes stored in configuration for ASG #{@asg_name}")
 
