@@ -58,6 +58,10 @@ OptionParser.new do |opts|
     $options['DOCDB_CLUSTER_ID'] = cluster
   end
 
+  opts.on('--transfer-server-id [TRANSFER_SERVER_ID]') do |server|
+    $options['TRANSFER_SERVER_ID'] = server
+  end
+
   opts.on('--ec2-instance-id [EC2_INSTANCE_ID]') do |ec2|
     $options['EC2_INSTANCE_ID'] = ec2
   end
@@ -143,6 +147,12 @@ case command
   when 'start-docdb-cluster'
     CfnManage::CloudFormation::EnvironmentRunStop.new().start_resource($options['DOCDB_CLUSTER_ID'],'AWS::DocDB::DBCluster')
 
+  # docdb cluster commands
+when 'stop-transfer-server'
+  CfnManage::CloudFormation::EnvironmentRunStop.new().stop_resource($options['TRANSFER_SERVER_ID'],'AWS::Transfer::Server')
+when 'start-transfer-server'
+  CfnManage::CloudFormation::EnvironmentRunStop.new().start_resource($options['TRANSFER_SERVER_ID'],'AWS::Transfer::Server')
+      
   # ec2 instance
   when 'stop-ec2'
     CfnManage::CloudFormation::EnvironmentRunStop.new().stop_resource($options['EC2_INSTANCE_ID'],'AWS::EC2::Instance')

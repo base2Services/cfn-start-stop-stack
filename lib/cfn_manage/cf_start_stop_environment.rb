@@ -32,6 +32,7 @@ module CfnManage
           'AWS::AutoScaling::AutoScalingGroup' => '200',
           'AWS::EC2::Instance' => '200',
           'AWS::EC2::SpotFleet' => '200',
+          'AWS::Transfer::Server' => '200',
           'AWS::ECS::Cluster' => '250',
           'AWS::CloudWatch::Alarm' => '300'
       }

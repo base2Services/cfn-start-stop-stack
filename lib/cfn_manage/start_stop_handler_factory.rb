@@ -6,6 +6,7 @@ require 'cfn_manage/alarm_start_stop_handler'
 require 'cfn_manage/spot_fleet_start_stop_handler'
 require 'cfn_manage/ecs_cluster_start_stop_handler'
 require 'cfn_manage/documentdb_cluster_start_stop_handler'
+require 'cfn_manage/transfer_start_stop_handler'
 
 module CfnManage
 
@@ -39,6 +40,9 @@ module CfnManage
 
         when 'AWS::ECS::Cluster'
           return CfnManage::EcsClusterStartStopHandler.new(resource_id, skip_wait)
+
+        when 'AWS::Transfer::Server'
+          return CfnManage::TransferStartStopHandler.new(resource_id, skip_wait)
 
         else
           return nil
