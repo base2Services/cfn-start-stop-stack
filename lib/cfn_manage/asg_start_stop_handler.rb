@@ -8,6 +8,7 @@ module CfnManage
       @asg_name = asg_id
       @skip_wait = skip_wait
       @asg_suspend_termination = (ENV.key?('ASG_SUSPEND_TERMINATION') and ENV['ASG_SUSPEND_TERMINATION'] == '1')
+      @wait_type = ENV.key?('ASG_WAIT_TYPE') ? ENV['ASG_WAIT_TYPE'] : 'HealthyInASG'
       credentials = CfnManage::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
       @asg_client = Aws::AutoScaling::Client.new(retry_limit: 20)
       @ec2_client = Aws::EC2::Client.new(retry_limit: 20)
@@ -106,6 +107,7 @@ module CfnManage
           max_size: configuration['max_size'],
           desired_capacity: configuration['desired_capacity']
         })
+        
       else
 
         $log.info("Starting instances for ASG #{@asg_name}...")
@@ -121,38 +123,21 @@ module CfnManage
           $log.info("Starting instance #{@instance_id}")
           @instance.start()
         end
-
-        unhealthy = true
-
-        $log.info("Checking health status for instances for ASG #{@asg_name}")
-
-        while unhealthy do
-          
-          asg_curr_details = @asg_client.describe_auto_scaling_groups(
-            auto_scaling_group_names: [@asg_name]
-          )
-          @asg_status = asg_curr_details.auto_scaling_groups[0]
-
-          allHealthy = 0
-
-          @asg_status.instances.each do |instance|
-            @instance_health = instance.health_status
-            if @instance_health == "Healthy"
-              allHealthy += 1
-            else
-              $log.info("Instance #{instance.instance_id} not currently healthy...")
-              sleep(15)
-            end
-          end
-
-          if allHealthy == @asg_status.instances.length
-            $log.info("All instances healthy in ASG #{@asg_name}")
-            unhealthy = false
-            break
-          end
-
-        end
-
+        
+      end
+      
+      if @skip_wait && @asg_suspend_termination
+        # If wait is skipped we still need to wait until the instances are healthy in the asg
+        # before resuming the processes. This will avoid the asg terminating the instances.
+        wait('HealthyInASG')
+      elsif !@skip_wait
+        # if we are waiting for the instances to reach a desired state
+        $log.info("Waiting for ASG instances with wait type #{@wait_type}")
+        wait(@wait_type)
+      end
+      
+      if @asg_suspend_termination 
+        # resume the asg processes after we've waited for them to become healthy
         $log.info("Resuming all processes for ASG #{@asg_name}")
 
         @asg_client.resume_processes({
@@ -173,8 +158,127 @@ module CfnManage
 
     end
 
-    def wait(wait_states=[])
-      $log.debug("Not waiting for ASG #{@asg_name}")
+    def wait(type)
+      
+      attempts = 0
+      
+      until attempts == (max_attempts = 60*6) do
+        
+        case type
+        when 'HealthyInASG'
+          success = wait_till_healthy_in_asg()
+        when 'Running'
+          success = wait_till_running()
+        when 'HealthyInTargetGroup'
+          success = wait_till_healthy_in_target_group()
+        else
+          $log.warn("unknown asg wait type #{type}. skipping...")
+          break
+        end
+        
+        if success
+          break
+        end
+        
+        attempts = attempts + 1
+        sleep(15)
+      end
+
+      if attempts == max_attempts
+        $log.error("Failed to wait for asg with wait type #{type}")
+      end
+    end
+    
+    def wait_till_healthy_in_asg
+
+      asg_curr_details = @asg_client.describe_auto_scaling_groups(
+        auto_scaling_group_names: [@asg_name]
+      )
+      
+      asg_status = asg_curr_details.auto_scaling_groups.first
+      health_status = asg_status.instances.collect { |inst| inst.health_status }
+      
+      if health_status.all? "Healthy"
+        $log.info("All instances healthy in ASG #{@asg_name}")
+        return true
+      end
+        
+      unhealthy = @asg_status.instances.select {|inst| inst.health_status == "Unhealthy" }.collect {|inst| inst.instance_id }
+      $log.info("waiting for instances #{unhealthy} to become healthy in asg #{@asg_name}")
+      return false
+      
+    end
+    
+    def wait_till_running
+        
+      asg_curr_details = @asg_client.describe_auto_scaling_groups(
+        auto_scaling_group_names: [@asg_name]
+      )
+      asg_status = asg_curr_details.auto_scaling_groups.first
+      instances = asg_status.instances.collect { |inst| inst.instance_id }
+      
+      status = @ec2_client.describe_instance_status({
+        instance_ids: instances
+      })
+      
+      state = status.instance_statuses.collect {|inst| inst.instance_state.name}
+      
+      if state.all? "running"
+        $log.info("All instances in a running state from ASG #{@asg_name}")
+        return true
+      end
+      
+      not_running = @status.instance_statuses.select {|inst| inst.instance_state.name != "running" }
+      not_running.each do |inst|
+        $log.info("waiting for instances #{inst.instance_id} to be running. Current state is #{inst.instance_state.name}")
+      end
+      
+      return false
+      
+    end
+    
+    def wait_till_healthy_in_target_group
+        
+      asg_curr_details = @asg_client.describe_auto_scaling_groups(
+        auto_scaling_group_names: [@asg_name]
+      )
+      asg_status = asg_curr_details.auto_scaling_groups.first
+      asg_instances = asg_status.instances.collect { |inst| inst.instance_id }
+      target_groups = asg_status.target_group_arns
+      
+      if target_groups.empty?
+        $log.warn("ASG #{@asg_name} is not associated with any target groups")
+        return true
+      end
+      
+      target_health = []
+      target_groups.each do |tg| 
+        resp = client.describe_target_health({
+          target_group_arn: tg, 
+        })
+        if resp.target_health_description.length != asg_instances.length
+          # we need to wait until all asg insatnces have been placed into the target group 
+          # before we can check they're healthy
+          $log.info("All ASG instances haven't been placed into target group #{tg} yet")
+          return false
+        end
+        target_health.push(*resp.target_health_descriptions)
+      end
+      
+      state = target_health.collect {|tg| tg.target_health.state}
+      
+      if state.all? 'healthy'
+        $log.info("All instances are in a healthy state in target groups #{target_groups.join(',')}")
+        return true
+      end
+      
+      unhealthy = target_health.select {|tg| tg.target_health.state != 'healthy'}
+      unhealthy.each do |tg|
+        $log.info("waiting for instances #{tg.target.id} to be healthy in target group. Current state is #{inst.target_health.state}")
+      end
+      
+      return false
+      
     end
 
   end
