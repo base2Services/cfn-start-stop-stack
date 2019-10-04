@@ -29,7 +29,7 @@ module CfnManage
         case resource_type
         when 'AWS::AutoScaling::AutoScalingGroup'
           tags = get_asg_tags(resource_id)
-          priority = get_priority_tag(tags[:tags])
+          priority = get_priority_tag(tags)
         end
 
       end
@@ -42,7 +42,7 @@ module CfnManage
     end
     
     def get_priority_tag(tags)
-      tags.select {|tag| tag[:key] == 'cfn_manage:priority'}.collect {|tag| tag[:value]}.first
+      tags.select {|tag| tag.key == 'cfn_manage:priority'}.collect {|tag| tag.value}.first
     end
     
     def get_asg_tags()
@@ -55,6 +55,7 @@ module CfnManage
           }
         ]
       })
+      return resp.tags
     end
   
   end
