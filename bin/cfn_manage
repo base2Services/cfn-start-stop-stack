@@ -119,6 +119,10 @@ OptionParser.new do |opts|
   opts.on('--asg-suspend-termination') do
     ENV['ASG_SUSPEND_TERMINATION'] = '1'
   end
+  
+  opts.on('--by-tags') do
+    ENV['ORDER_BY_TAGS'] = '1'
+  end
 
 end.parse!
 

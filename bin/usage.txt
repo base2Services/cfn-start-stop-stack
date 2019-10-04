@@ -105,3 +105,8 @@ General options:
     'HealthyInASG' - waits for all instances to reach a healthy state in the asg
     'Running' - waits for all instances to reach the EC2 running state
     'HealthyInTargetGroup' - waits for all instances to reach a healthy state in all asg assocated target groups
+    
+--by-tags
+
+    will query resource tag `cfn_manage:priority` for prefered starting order
+    will default to defined resource order if no tag is found or resource doesn't support tags
