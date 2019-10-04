@@ -25,18 +25,6 @@ module CfnManage
       @credentials = nil
       @dry_run = false
 
-      @@resource_start_priorities = {
-          'AWS::RDS::DBInstance' => '100',
-          'AWS::RDS::DBCluster' => '100',
-          'AWS::DocDB::DBCluster' => '100',
-          'AWS::AutoScaling::AutoScalingGroup' => '200',
-          'AWS::EC2::Instance' => '200',
-          'AWS::EC2::SpotFleet' => '200',
-          'AWS::Transfer::Server' => '200',
-          'AWS::ECS::Cluster' => '250',
-          'AWS::CloudWatch::Alarm' => '300'
-      }
-
       def initialize()
         @environment_resources = []
         @s3_client = Aws::S3::Client.new(retry_limit: 20)
@@ -50,6 +38,7 @@ module CfnManage
         @skip_wait = (ENV.key?('SKIP_WAIT') and ENV['SKIP_WAIT'] == '1')
         @wait_async = (ENV.key?('WAIT_ASYNC') and ENV['WAIT_ASYNC'] == '1')
         @continue_on_error = (ENV.key? 'CFN_CONTINUE_ON_ERROR' and ENV['CFN_CONTINUE_ON_ERROR'] == '1')
+        @priority = CfnManage.Priority.new()
       rescue NoMethodError => e
         puts "Got No Method Error on CloudFormation::initialize, this often means that you're missing a AWS_DEFAULT_REGION"
       rescue Aws::Sigv4::Errors::MissingCredentialsError => e
@@ -84,7 +73,7 @@ module CfnManage
         )
         @environment_resources << {
             id: resource_id,
-            priority: @@resource_start_priorities[resource_type],
+            priority: @priority.get_priority(resource_type,resource_id),
             handler: start_stop_handler,
             type: resource_type
         }
@@ -99,7 +88,7 @@ module CfnManage
         )
         @environment_resources << {
             id: resource_id,
-            priority: @@resource_start_priorities[resource_type],
+            priority: @priority.get_priority(resource_type,resource_id),
             handler: start_stop_handler,
             type: resource_type
         }
@@ -220,11 +209,13 @@ module CfnManage
           end
           if not start_stop_handler.nil?
             resource_id = resource['physical_resource_id']
+            resource_type = resource['resource_type']
+            
             @environment_resources << {
                 id: resource_id,
-                priority: @@resource_start_priorities[resource['resource_type']],
+                priority: @priority.get_priority(resource_type,resource_id),
                 handler: start_stop_handler,
-                type: resource['resource_type']
+                type: resource_type
             }
           end
         end
