@@ -1,5 +1,9 @@
 require 'cfn_manage/aws_credentials'
 
+require 'aws-sdk-autoscaling'
+require 'aws-sdk-ec2'
+require 'aws-sdk-elasticloadbalancingv2'
+
 module CfnManage
 
   class AsgStartStopHandler
@@ -12,9 +16,11 @@ module CfnManage
       credentials = CfnManage::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
       @asg_client = Aws::AutoScaling::Client.new(retry_limit: 20)
       @ec2_client = Aws::EC2::Client.new(retry_limit: 20)
+      @elb_client = Aws::ElasticLoadBalancingV2::Client.new(retry_limit: 20)
       if credentials != nil
         @asg_client = Aws::AutoScaling::Client.new(credentials: credentials, retry_limit: 20)
         @ec2_client = Aws::EC2::Client.new(credentials: credentials, retry_limit: 20)
+        @elb_client = Aws::ElasticLoadBalancingV2::Client.new(credentials: credentials, retry_limit: 20)
       end
 
       asg_details = @asg_client.describe_auto_scaling_groups(
@@ -219,7 +225,7 @@ module CfnManage
       
       if instances.empty?
         $log.warn("ASG #{@asg_name} has not started any instances yet")
-        return true
+        return false
       end
       
       status = @ec2_client.describe_instance_status({
@@ -251,35 +257,41 @@ module CfnManage
       asg_instances = asg_status.instances.collect { |inst| inst.instance_id }
       target_groups = asg_status.target_group_arns
       
+      if asg_instances.empty?
+        $log.warn("ASG #{@asg_name} has not started any instances yet")
+        return false
+      end
+      
       if target_groups.empty?
+        # we want to skip here if the asg is not associated with any target groups
         $log.warn("ASG #{@asg_name} is not associated with any target groups")
         return true
       end
       
       target_health = []
       target_groups.each do |tg| 
-        resp = client.describe_target_health({
+        resp = @elb_client.describe_target_health({
           target_group_arn: tg, 
         })
-        if resp.target_health_description.length != asg_instances.length
+        if resp.target_health_descriptions.length != asg_instances.length
           # we need to wait until all asg insatnces have been placed into the target group 
           # before we can check they're healthy
-          $log.info("All ASG instances haven't been placed into target group #{tg} yet")
+          $log.info("All ASG instances haven't been placed into target group #{tg.split('/')[1]} yet")
           return false
         end
         target_health.push(*resp.target_health_descriptions)
       end
-      
+            
       state = target_health.collect {|tg| tg.target_health.state}
       
       if state.all? 'healthy'
-        $log.info("All instances are in a healthy state in target groups #{target_groups.join(',')}")
+        $log.info("All instances are in a healthy state in target groups #{target_groups.map {|tg| tg.split('/')[1] }}")
         return true
       end
       
       unhealthy = target_health.select {|tg| tg.target_health.state != 'healthy'}
       unhealthy.each do |tg|
-        $log.info("waiting for instances #{tg.target.id} to be healthy in target group. Current state is #{inst.target_health.state}")
+        $log.info("waiting for instances #{tg.target.id} to be healthy in target group. Current state is #{tg.target_health.state}")
       end
       
       return false
