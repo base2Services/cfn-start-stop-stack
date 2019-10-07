@@ -157,7 +157,7 @@ module CfnManage
                 # read configuration
                 s3_prefix = "environment_data/resource/#{resource[:id]}"
                 configuration = get_object_configuration(s3_prefix)
-
+                
                 # start
                 resource[:handler].start(configuration)
               else
@@ -222,7 +222,7 @@ module CfnManage
       end
 
       def get_object_configuration(s3_prefix)
-        configuration = nil
+        configuration = {}
         begin
           key = "#{s3_prefix}/latest/config.json"
           $log.info("Reading object configuration from s3://#{@s3_bucket}/#{key}")
