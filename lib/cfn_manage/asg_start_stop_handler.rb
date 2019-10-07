@@ -217,6 +217,11 @@ module CfnManage
       asg_status = asg_curr_details.auto_scaling_groups.first
       instances = asg_status.instances.collect { |inst| inst.instance_id }
       
+      if instances.empty?
+        $log.warn("ASG #{@asg_name} has not started any instances yet")
+        return true
+      end
+      
       status = @ec2_client.describe_instance_status({
         instance_ids: instances
       })
