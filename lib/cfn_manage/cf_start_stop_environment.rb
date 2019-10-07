@@ -10,6 +10,7 @@ require 'aws-sdk-docdb'
 
 require 'cfn_manage/cf_common'
 require 'cfn_manage/aws_credentials'
+require 'cfn_manage/priority'
 require 'json'
 require 'yaml'
 require 'cfn_manage/start_stop_handler_factory'
@@ -34,11 +35,14 @@ module CfnManage
         if not @credentials.nil?
           @cf_client = Aws::CloudFormation::Client.new(credentials: @credentials, retry_limit: 20)
         end
-        @dry_run = (ENV.key?('DRY_RUN') and ENV['DRY_RUN'] == '1')
-        @skip_wait = (ENV.key?('SKIP_WAIT') and ENV['SKIP_WAIT'] == '1')
-        @wait_async = (ENV.key?('WAIT_ASYNC') and ENV['WAIT_ASYNC'] == '1')
+        
+        # setting global options
+        @dry_run = (ENV.key?('DRY_RUN') && ENV['DRY_RUN'] == '1')
+        @skip_wait = (ENV.key?('SKIP_WAIT') && ENV['SKIP_WAIT'] == '1')
+        @tags = (ENV.key?('CFN_MANAGE_TAGS') && ENV['CFN_MANAGE_TAGS'] == '1')
+        @wait_async = (ENV.key?('WAIT_ASYNC') && ENV['WAIT_ASYNC'] == '1')
         @continue_on_error = (ENV.key? 'CFN_CONTINUE_ON_ERROR' and ENV['CFN_CONTINUE_ON_ERROR'] == '1')
-        @priority = CfnManage.Priority.new()
+        
       rescue NoMethodError => e
         puts "Got No Method Error on CloudFormation::initialize, this often means that you're missing a AWS_DEFAULT_REGION"
       rescue Aws::Sigv4::Errors::MissingCredentialsError => e
@@ -71,9 +75,10 @@ module CfnManage
             resource_id,
             @skip_wait
         )
+        priority = Priority.get_priority(resource_type,resource_id)
         @environment_resources << {
             id: resource_id,
-            priority: @priority.get_priority(resource_type,resource_id),
+            priority: priority,
             handler: start_stop_handler,
             type: resource_type
         }
@@ -86,9 +91,10 @@ module CfnManage
             resource_id,
             @skip_wait
         )
+        priority = Priority.get_priority(resource_type,resource_id)
         @environment_resources << {
             id: resource_id,
-            priority: @priority.get_priority(resource_type,resource_id),
+            priority: priority,
             handler: start_stop_handler,
             type: resource_type
         }
@@ -204,16 +210,17 @@ module CfnManage
                 @skip_wait
             )
           rescue Exception => e
-            $log.error("Error creating start-stop handler for resource of type #{resource['resource_type']}" +
+            $log.error("Error creating start-stop handler for resource of type #{resource['resource_type']} " +
                 "and with id #{resource['physical_resource_id']}:#{e}")
           end
           if not start_stop_handler.nil?
             resource_id = resource['physical_resource_id']
             resource_type = resource['resource_type']
+            priority = Priority.get_priority(resource_type,resource_id)
             
             @environment_resources << {
                 id: resource_id,
-                priority: @priority.get_priority(resource_type,resource_id),
+                priority: priority,
                 handler: start_stop_handler,
                 type: resource_type
             }

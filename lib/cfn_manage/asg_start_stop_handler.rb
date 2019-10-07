@@ -1,4 +1,6 @@
 require 'cfn_manage/aws_credentials'
+require 'cfn_manage/globals'
+require 'cfn_manage/tag_reader'
 
 require 'aws-sdk-autoscaling'
 require 'aws-sdk-ec2'
@@ -11,7 +13,7 @@ module CfnManage
     def initialize(asg_id, skip_wait)
       @asg_name = asg_id
       @skip_wait = skip_wait
-      @asg_suspend_termination = (ENV.key?('ASG_SUSPEND_TERMINATION') and ENV['ASG_SUSPEND_TERMINATION'] == '1')
+      @asg_suspend_termination = (ENV.key?('ASG_SUSPEND_TERMINATION') && ENV['ASG_SUSPEND_TERMINATION'] == '1')
       @wait_type = ENV.key?('ASG_WAIT_TYPE') ? ENV['ASG_WAIT_TYPE'] : 'HealthyInASG'
       credentials = CfnManage::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
       @asg_client = Aws::AutoScaling::Client.new(retry_limit: 20)
