@@ -1,12 +1,12 @@
-require 'cfn_manage/asg_start_stop_handler'
-require 'cfn_manage/ec2_start_stop_handler'
-require 'cfn_manage/rds_start_stop_handler'
-require 'cfn_manage/aurora_cluster_start_stop_handler'
-require 'cfn_manage/alarm_start_stop_handler'
-require 'cfn_manage/spot_fleet_start_stop_handler'
-require 'cfn_manage/ecs_cluster_start_stop_handler'
-require 'cfn_manage/documentdb_cluster_start_stop_handler'
-require 'cfn_manage/transfer_start_stop_handler'
+require 'cfn_manage/handlers/asg'
+require 'cfn_manage/handlers/ec2'
+require 'cfn_manage/handlers/rds'
+require 'cfn_manage/handlers/aurora_cluster'
+require 'cfn_manage/handlers/alarm'
+require 'cfn_manage/handlers/spot_fleet'
+require 'cfn_manage/handlers/ecs_cluster'
+require 'cfn_manage/handlers/documentdb'
+require 'cfn_manage/handlers/transfer'
 
 module CfnManage
 
@@ -15,34 +15,34 @@ module CfnManage
     #   Factory method to get start/stop handler based on CloudFormation
     # resource type. If resource_id passed in does not exist, it is
     # very likely that exception will be raised
-    def self.get_start_stop_handler(resource_type, resource_id, skip_wait)
+    def self.get_start_stop_handler(resource_type, resource_id)
       case resource_type
         when 'AWS::AutoScaling::AutoScalingGroup'
-          return CfnManage::AsgStartStopHandler.new(resource_id, skip_wait)
+          return CfnManage::StartStopHandler::Asg.new(resource_id)
 
         when 'AWS::EC2::Instance'
-          return CfnManage::Ec2StartStopHandler.new(resource_id, skip_wait)
+          return CfnManage::StartStopHandler::Ec2.new(resource_id)
 
         when 'AWS::RDS::DBInstance'
-          return CfnManage::RdsStartStopHandler.new(resource_id, skip_wait)
+          return CfnManage::StartStopHandler::Rds.new(resource_id)
 
         when 'AWS::RDS::DBCluster'
-          return CfnManage::AuroraClusterStartStopHandler.new(resource_id, skip_wait)
+          return CfnManage::StartStopHandler::AuroraCluster.new(resource_id)
 
         when 'AWS::DocDB::DBCluster'
-          return CfnManage::DocumentDbClusterStartStopHandler.new(resource_id, skip_wait)
+          return CfnManage::StartStopHandler::DocumentDb.new(resource_id)
 
         when 'AWS::CloudWatch::Alarm'
-          return CfnManage::AlarmStartStopHandler.new(resource_id)
+          return CfnManage::StartStopHandler::Alarm.new(resource_id)
 
         when 'AWS::EC2::SpotFleet'
-          return CfnManage::SpotFleetStartStopHandler.new(resource_id, skip_wait)
+          return CfnManage::StartStopHandler::SpotFleet.new(resource_id)
 
         when 'AWS::ECS::Cluster'
-          return CfnManage::EcsClusterStartStopHandler.new(resource_id, skip_wait)
+          return CfnManage::StartStopHandler::EcsCluster.new(resource_id)
 
         when 'AWS::Transfer::Server'
-          return CfnManage::TransferStartStopHandler.new(resource_id, skip_wait)
+          return CfnManage::StartStopHandler::Transfer.new(resource_id)
 
         else
           return nil

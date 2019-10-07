@@ -1,5 +1,4 @@
 require 'cfn_manage/aws_credentials'
-require 'cfn_manage/asg_start_stop_handler'
 
 module CfnManage
   class TagReader
