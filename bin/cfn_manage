@@ -106,10 +106,12 @@ OptionParser.new do |opts|
   opts.on('--wait-async') do
     ENV['WAIT_ASYNC'] = '1'
     ENV['SKIP_WAIT'] = '1'
+    CfnManage.skip_wait
   end
 
   opts.on('--skip-wait') do
     ENV['SKIP_WAIT'] = '1'
+    CfnManage.skip_wait
   end
 
   opts.on('--ignore-missing-ecs-config') do
@@ -120,8 +122,8 @@ OptionParser.new do |opts|
     ENV['ASG_SUSPEND_TERMINATION'] = '1'
   end
   
-  opts.on('--by-tags') do
-    ENV['ORDER_BY_TAGS'] = '1'
+  opts.on('--tags') do
+    CfnManage.find_tags
   end
 
 end.parse!
