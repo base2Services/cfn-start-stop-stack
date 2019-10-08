@@ -5,7 +5,7 @@ module CfnManage
   module StartStopHandler
     class AuroraCluster
 
-      def initialize(cluster_id)
+      def initialize(cluster_id, options = {})
         @cluster_id = cluster_id
         credentials = CfnManage::AWSCredentials.get_session_credentials("startstopcluster_#{cluster_id}")
         @rds_client = Aws::RDS::Client.new(retry_limit: 20)

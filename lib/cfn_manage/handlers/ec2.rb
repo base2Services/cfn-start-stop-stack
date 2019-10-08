@@ -5,7 +5,7 @@ module CfnManage
   module StartStopHandler
     class Ec2
 
-      def initialize(instance_id)
+      def initialize(instance_id, options = {})
         credentials = CfnManage::AWSCredentials.get_session_credentials("stoprun_#{instance_id}")
         ec2_client = Aws::EC2::Client.new(credentials: credentials, retry_limit: 20)
         @instance = Aws::EC2::Resource.new(client: ec2_client, retry_limit: 20).instance(instance_id)

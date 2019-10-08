@@ -8,9 +8,12 @@ module CfnManage
   module StartStopHandler
     class Asg
 
-      def initialize(asg_id)
+      def initialize(asg_id, options = {})
         @asg_name = asg_id
-        @wait_state = CfnManage.asg_wait_state
+        @wait_state = options.has_key?(:wait_state) ? options[:wait_state] : CfnManage.asg_wait_state
+        @skip_wait = options.has_key?(:skip_wait) ? options[:skip_wait] : CfnManage.skip_wait? 
+        @suspend_termination = options.has_key?(:suspend_termination) ? options[:suspend_termination] : CfnManage.asg_suspend_termination?
+        
         credentials = CfnManage::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
         @asg_client = Aws::AutoScaling::Client.new(retry_limit: 20)
         @ec2_client = Aws::EC2::Client.new(retry_limit: 20)
@@ -38,7 +41,7 @@ module CfnManage
           return nil
         else
 
-          unless CfnManage.asg_suspend_termination?
+          unless @suspend_termination
             # store asg configuration to S3
             configuration = {
                 desired_capacity: @asg.desired_capacity,
@@ -100,7 +103,7 @@ module CfnManage
         end
         $log.info("Starting ASG #{@asg_name} with following configuration\n#{configuration}")
 
-        unless CfnManage.asg_suspend_termination?
+        unless @suspend_termination
           # restore asg sizes
           @asg_client.update_auto_scaling_group({
             auto_scaling_group_name: @asg_name,
@@ -127,17 +130,17 @@ module CfnManage
           
         end
         
-        if CfnManage.skip_wait? && CfnManage.asg_suspend_termination?
+        if @skip_wait && @suspend_termination
           # If wait is skipped we still need to wait until the instances are healthy in the asg
           # before resuming the processes. This will avoid the asg terminating the instances.
           wait('HealthyInASG')
-        elsif !CfnManage.skip_wait?
+        elsif !@skip_wait
           # if we are waiting for the instances to reach a desired state
           $log.info("Waiting for ASG instances wait state #{@wait_state}")
           wait(@wait_state)
         end
         
-        if CfnManage.asg_suspend_termination?
+        if @suspend_termination
           # resume the asg processes after we've waited for them to become healthy
           $log.info("Resuming all processes for ASG #{@asg_name}")
 
@@ -199,7 +202,7 @@ module CfnManage
         asg_status = asg_curr_details.auto_scaling_groups.first
         health_status = asg_status.instances.collect { |inst| inst.health_status }
         
-        if instances.empty?
+        if health_status.empty?
           $log.info("ASG #{@asg_name} has not started any instances yet")
           return false
         end

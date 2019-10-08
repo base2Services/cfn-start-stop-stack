@@ -5,7 +5,7 @@ module CfnManage
   module StartStopHandler
     class Rds
 
-      def initialize(instance_id)
+      def initialize(instance_id, options = {})
         @instance_id = instance_id
         @excluded_engines = %w(aurora aurora-mysql aurora-postgresql) # RDS list of exluded engines that don't support RDS stop start
         credentials = CfnManage::AWSCredentials.get_session_credentials("startstoprds_#{instance_id}")

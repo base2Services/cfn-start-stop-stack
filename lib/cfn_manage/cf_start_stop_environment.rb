@@ -24,6 +24,10 @@ module CfnManage
         'AWS::ECS::Cluster' => '250',
         'AWS::CloudWatch::Alarm' => '300'
       }
+      
+      TAGGED_RESOURCES = %w(
+        AWS::AutoScaling::AutoScalingGroup
+      )
 
       def initialize()
         @environment_resources = []
@@ -62,16 +66,20 @@ module CfnManage
 
       def start_resource(resource_id,resource_type)
         priority = DEFAULT_PRIORITIES[resource_type]
+        options = {}
         
         if CfnManage.find_tags?
-          tags = CfnManage::FindTags.new(resource_id)
+          tags = CfnManage::TagFiner.new(resource_id)
           tags.get_tags(resource_type)  
           priority = !tags.priority.nil? ? tags.priority : priority
+          options = tags.options
+          $log.debug("setting options #{options} for #{resource_id}")
         end
         
         start_stop_handler = CfnManage::StartStopHandlerFactory.get_start_stop_handler(
             resource_type,
-            resource_id
+            resource_id,
+            options
         )
         
         @environment_resources << {
@@ -85,16 +93,19 @@ module CfnManage
 
       def stop_resource(resource_id,resource_type)
         priority = DEFAULT_PRIORITIES[resource_type]
+        options = {}
         
         if CfnManage.find_tags?
-          tags = CfnManage::FindTags.new(resource_id)
+          tags = CfnManage::TagFiner.new(resource_id)
           tags.get_tags(resource_type)  
           priority = !tags.priority.nil? ? tags.priority : priority
+          options = tags.options
         end
         
         start_stop_handler = CfnManage::StartStopHandlerFactory.get_start_stop_handler(
             resource_type,
-            resource_id
+            resource_id,
+            options
         )
 
         @environment_resources << {
@@ -208,20 +219,33 @@ module CfnManage
         resrouces = @cf_client.describe_stack_resources(stack_name: stack_name)
         resrouces['stack_resources'].each do |resource|
           start_stop_handler = nil
-          begin
+          
+          resource_id = resource['physical_resource_id']
+          resource_type = resource['resource_type']
+          priority = DEFAULT_PRIORITIES[resource_type]
+          options = {}
+          
+          if CfnManage.find_tags? && TAGGED_RESOURCES.include?(resource_type)
+            tags = CfnManage::TagFinder.new(resource_id)
+            tags.get_tags(resource_type)  
+            options = tags.options
+            priority = options[:priority] if options.has_key?(:priority)
+            $log.debug("setting options #{options} for #{resource_id}")
+          end
+          
+          begin    
             start_stop_handler = CfnManage::StartStopHandlerFactory.get_start_stop_handler(
-                resource['resource_type'],
-                resource['physical_resource_id']
+                resource_type,
+                resource_id,
+                options
             )
           rescue Exception => e
             $log.error("Error creating start-stop handler for resource of type #{resource['resource_type']} " +
                 "and with id #{resource['physical_resource_id']}:#{e}")
           end
-          if not start_stop_handler.nil?
-            resource_id = resource['physical_resource_id']
-            resource_type = resource['resource_type']
-            priority = DEFAULT_PRIORITIES[resource_type]
-            
+          
+          if !start_stop_handler.nil?
+            $log.debug("priority set to #{priority} for resource id: #{resource_id}, type: #{resource_type}")
             @environment_resources << {
                 id: resource_id,
                 priority: priority,

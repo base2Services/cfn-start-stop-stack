@@ -4,7 +4,7 @@ module CfnManage
   module StartStopHandler
     class SpotFleet
 
-      def initialize(fleet_id)
+      def initialize(fleet_id, options = {})
         @fleet_id = fleet_id
         credentials = CfnManage::AWSCredentials.get_session_credentials("startstopfleet_#{fleet_id}")
         @ec2_client = Aws::EC2::Client.new(retry_limit: 20)

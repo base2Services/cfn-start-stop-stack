@@ -5,7 +5,7 @@ module CfnManage
   module StartStopHandler
     class Alarm
 
-      def initialize(alarm_name)
+      def initialize(alarm_name,options = {})
         @alarm_id = alarm_name
         credentials = CfnManage::AWSCredentials.get_session_credentials("startstopalarm_#{@asg_name}")
         @cwclient = Aws::CloudWatch::Client.new(retry_limit: 20)

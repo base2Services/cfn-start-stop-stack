@@ -5,7 +5,7 @@ module CfnManage
   module StartStopHandler
     class EcsCluster
 
-      def initialize(cluster_id)
+      def initialize(cluster_id, options = {})
         credentials = CfnManage::AWSCredentials.get_session_credentials("stoprun_#{cluster_id}")
         @ecs_client = Aws::ECS::Client.new(credentials: credentials, retry_limit: 20)
         @services = []

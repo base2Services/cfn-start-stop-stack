@@ -5,7 +5,7 @@ module CfnManage
   module StartStopHandler
     class DocumentDb
 
-      def initialize(cluster_id, skip_wait)
+      def initialize(cluster_id, options = {})
         @cluster_id = cluster_id
         credentials = CfnManage::AWSCredentials.get_session_credentials("startstopcluster_#{cluster_id}")
         @docdb_client = Aws::DocDB::Client.new(retry_limit: 20)

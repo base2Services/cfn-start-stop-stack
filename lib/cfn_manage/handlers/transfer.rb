@@ -5,7 +5,7 @@ module CfnManage
   module StartStopHandler
     class Transfer
 
-      def initialize(server_id)
+      def initialize(server_id, options = {})
         sftpId = server_id.split("/")
         @server_id = sftpId.last
         credentials = CfnManage::AWSCredentials.get_session_credentials("startstoptransfer_#{@server_id}")
