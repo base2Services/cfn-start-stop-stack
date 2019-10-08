@@ -79,13 +79,13 @@ OptionParser.new do |opts|
     $options['ALARM'] = alarm
   end
   
-  opts.on('--asg-wait-type [WAIT_TYPE]') do |type|
+  opts.on('--asg-wait-state [WAIT_STATE]') do |state|
     allows_values = ['HealthyInASG','Running','HealthyInTargetGroup']
-    if !allows_values.include? type
-      STDERR.puts("#{type} is not a valid value for `--asg-wait-type`. Use one of #{allows_values.join(',')}")
+    if !allows_values.include? state
+      STDERR.puts("#{type} is not a valid value for `--asg-wait-state`. Use one of #{allows_values.join(',')}")
       exit 1
     end
-    ENV['ASG_WAIT_TYPE'] = type
+    CfnManage.asg_wait_state = state
   end
 
   opts.on('-r [AWS_REGION]', '--region [AWS_REGION]') do |region|

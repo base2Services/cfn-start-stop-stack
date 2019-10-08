@@ -5,7 +5,7 @@ require 'aws-sdk-autoscaling'
 module CfnManage
   class TagFinder
     
-    attr_accessor :priority, :wait_type
+    attr_accessor :priority, :wait_state
     
     def initialize(resource_id)
       @resource_id = resource_id
@@ -23,8 +23,8 @@ module CfnManage
       filter_by_key('cfn_manage:prority')
     end
     
-    def wait_type()
-      filter_by_key('cfn_manage:wait_type')
+    def wait_state()
+      filter_by_key('cfn_manage:wait_state')
     end
       
     def filter_by_key(key)

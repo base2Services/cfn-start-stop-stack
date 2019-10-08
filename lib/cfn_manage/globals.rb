@@ -1,5 +1,12 @@
 module CfnManage
+  
+  # set default options here
+  @asg_wait_state = 'HealthyInASG'
+  
   class << self
+    
+    # return the vale of our options
+    attr_accessor :asg_wait_state
     
     # find options set on resource tags
     def find_tags

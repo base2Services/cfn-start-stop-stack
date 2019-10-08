@@ -97,7 +97,7 @@ General options:
 
     Will stop instances in the autoscaling group(s) instead of the default behaviour of termination.
 
---asg-wait-type
+--asg-wait-state
     
     Allowed values ['HealthyInASG','Running','HealthyInTargetGroup']
     Default: 'HealthyInASG'

@@ -10,7 +10,7 @@ module CfnManage
 
       def initialize(asg_id)
         @asg_name = asg_id
-        @wait_type = ENV.key?('ASG_WAIT_TYPE') ? ENV['ASG_WAIT_TYPE'] : 'HealthyInASG'
+        @wait_state = CfnManage.asg_wait_state
         credentials = CfnManage::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
         @asg_client = Aws::AutoScaling::Client.new(retry_limit: 20)
         @ec2_client = Aws::EC2::Client.new(retry_limit: 20)
@@ -38,8 +38,6 @@ module CfnManage
           return nil
         else
 
-          puts @asg.auto_scaling_group_name
-
           unless CfnManage.asg_suspend_termination?
             # store asg configuration to S3
             configuration = {
@@ -50,7 +48,6 @@ module CfnManage
 
             $log.info("Setting desired capacity to 0/0/0 for ASG #{@asg.auto_scaling_group_name}A")
 
-            puts @asg.auto_scaling_group_name
             @asg_client.update_auto_scaling_group({
                 auto_scaling_group_name: "#{@asg.auto_scaling_group_name}",
                 min_size: 0,
@@ -136,8 +133,8 @@ module CfnManage
           wait('HealthyInASG')
         elsif !CfnManage.skip_wait?
           # if we are waiting for the instances to reach a desired state
-          $log.info("Waiting for ASG instances with wait type #{@wait_type}")
-          wait(@wait_type)
+          $log.info("Waiting for ASG instances wait state #{@wait_state}")
+          wait(@wait_state)
         end
         
         if CfnManage.asg_suspend_termination?
@@ -202,6 +199,11 @@ module CfnManage
         asg_status = asg_curr_details.auto_scaling_groups.first
         health_status = asg_status.instances.collect { |inst| inst.health_status }
         
+        if instances.empty?
+          $log.info("ASG #{@asg_name} has not started any instances yet")
+          return false
+        end
+        
         if health_status.all? "Healthy"
           $log.info("All instances healthy in ASG #{@asg_name}")
           return true
@@ -222,7 +224,7 @@ module CfnManage
         instances = asg_status.instances.collect { |inst| inst.instance_id }
         
         if instances.empty?
-          $log.warn("ASG #{@asg_name} has not started any instances yet")
+          $log.info("ASG #{@asg_name} has not started any instances yet")
           return false
         end
         
@@ -256,13 +258,13 @@ module CfnManage
         target_groups = asg_status.target_group_arns
         
         if asg_instances.empty?
-          $log.warn("ASG #{@asg_name} has not started any instances yet")
+          $log.info("ASG #{@asg_name} has not started any instances yet")
           return false
         end
         
         if target_groups.empty?
           # we want to skip here if the asg is not associated with any target groups
-          $log.warn("ASG #{@asg_name} is not associated with any target groups")
+          $log.info("ASG #{@asg_name} is not associated with any target groups")
           return true
         end
         
