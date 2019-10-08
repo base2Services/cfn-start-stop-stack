@@ -120,6 +120,7 @@ OptionParser.new do |opts|
   end
   
   if ENV['WAIT_ASYNC'] == '1'
+    CfnManage.skip_wait
     CfnManage.wait_async
   end
 
