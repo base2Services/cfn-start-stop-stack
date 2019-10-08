@@ -1,41 +1,33 @@
-require 'aws-sdk-ec2'
+require 'json'
+require 'yaml'
+
 require 'aws-sdk-s3'
-require 'aws-sdk-ec2'
 require 'aws-sdk-cloudformation'
-require 'aws-sdk-rds'
-require 'aws-sdk-cloudwatch'
-require 'aws-sdk-autoscaling'
-require 'aws-sdk-ecs'
-require 'aws-sdk-docdb'
 
 require 'cfn_manage/cf_common'
 require 'cfn_manage/aws_credentials'
-require 'json'
-require 'yaml'
+require 'cfn_manage/tag_finder'
 require 'cfn_manage/start_stop_handler_factory'
 
 module CfnManage
   module CloudFormation
     class EnvironmentRunStop
 
-      @cf_client = nil
-      @stack_name = nil
-      @s3_client = nil
-      @s3_bucket = nil
-      @credentials = nil
-      @dry_run = false
-
-      @@resource_start_priorities = {
-          'AWS::RDS::DBInstance' => '100',
-          'AWS::RDS::DBCluster' => '100',
-          'AWS::DocDB::DBCluster' => '100',
-          'AWS::AutoScaling::AutoScalingGroup' => '200',
-          'AWS::EC2::Instance' => '200',
-          'AWS::EC2::SpotFleet' => '200',
-          'AWS::Transfer::Server' => '200',
-          'AWS::ECS::Cluster' => '250',
-          'AWS::CloudWatch::Alarm' => '300'
+      DEFAULT_PRIORITIES = {
+        'AWS::RDS::DBInstance' => '100',
+        'AWS::RDS::DBCluster' => '100',
+        'AWS::DocDB::DBCluster' => '100',
+        'AWS::AutoScaling::AutoScalingGroup' => '200',
+        'AWS::EC2::Instance' => '200',
+        'AWS::EC2::SpotFleet' => '200',
+        'AWS::Transfer::Server' => '200',
+        'AWS::ECS::Cluster' => '250',
+        'AWS::CloudWatch::Alarm' => '300'
       }
+      
+      TAGGED_RESOURCES = %w(
+        AWS::AutoScaling::AutoScalingGroup
+      )
 
       def initialize()
         @environment_resources = []
@@ -46,10 +38,6 @@ module CfnManage
         if not @credentials.nil?
           @cf_client = Aws::CloudFormation::Client.new(credentials: @credentials, retry_limit: 20)
         end
-        @dry_run = (ENV.key?('DRY_RUN') and ENV['DRY_RUN'] == '1')
-        @skip_wait = (ENV.key?('SKIP_WAIT') and ENV['SKIP_WAIT'] == '1')
-        @wait_async = (ENV.key?('WAIT_ASYNC') and ENV['WAIT_ASYNC'] == '1')
-        @continue_on_error = (ENV.key? 'CFN_CONTINUE_ON_ERROR' and ENV['CFN_CONTINUE_ON_ERROR'] == '1')
       rescue NoMethodError => e
         puts "Got No Method Error on CloudFormation::initialize, this often means that you're missing a AWS_DEFAULT_REGION"
       rescue Aws::Sigv4::Errors::MissingCredentialsError => e
@@ -62,7 +50,7 @@ module CfnManage
         Common.visit_stack(@cf_client, stack_name, method(:collect_resources), true)
         do_start_assets
         configuration = { stack_running: true }
-        save_item_configuration("environment_data/stack-#{stack_name}", configuration) unless @dry_run
+        save_item_configuration("environment_data/stack-#{stack_name}", configuration) unless CfnManage.dry_run?
         $log.info("Environment #{stack_name} started")
       end
 
@@ -72,19 +60,31 @@ module CfnManage
         Common.visit_stack(@cf_client, stack_name, method(:collect_resources), true)
         do_stop_assets
         configuration = { stack_running: false }
-        save_item_configuration("environment_data/stack-#{stack_name}", configuration) unless @dry_run
+        save_item_configuration("environment_data/stack-#{stack_name}", configuration) unless CfnManage.dry_run?
         $log.info("Environment #{stack_name} stopped")
       end
 
       def start_resource(resource_id,resource_type)
+        priority = DEFAULT_PRIORITIES[resource_type]
+        options = {}
+        
+        if CfnManage.find_tags?
+          tags = CfnManage::TagFiner.new(resource_id)
+          tags.get_tags(resource_type)  
+          priority = !tags.priority.nil? ? tags.priority : priority
+          options = tags.options
+          $log.debug("setting options #{options} for #{resource_id}")
+        end
+        
         start_stop_handler = CfnManage::StartStopHandlerFactory.get_start_stop_handler(
             resource_type,
             resource_id,
-            @skip_wait
+            options
         )
+        
         @environment_resources << {
             id: resource_id,
-            priority: @@resource_start_priorities[resource_type],
+            priority: priority,
             handler: start_stop_handler,
             type: resource_type
         }
@@ -92,14 +92,25 @@ module CfnManage
       end
 
       def stop_resource(resource_id,resource_type)
+        priority = DEFAULT_PRIORITIES[resource_type]
+        options = {}
+        
+        if CfnManage.find_tags?
+          tags = CfnManage::TagFiner.new(resource_id)
+          tags.get_tags(resource_type)  
+          priority = !tags.priority.nil? ? tags.priority : priority
+          options = tags.options
+        end
+        
         start_stop_handler = CfnManage::StartStopHandlerFactory.get_start_stop_handler(
             resource_type,
             resource_id,
-            @skip_wait
+            options
         )
+
         @environment_resources << {
             id: resource_id,
-            priority: @@resource_start_priorities[resource_type],
+            priority: priority,
             handler: start_stop_handler,
             type: resource_type
         }
@@ -116,7 +127,7 @@ module CfnManage
             begin
               $log.info("Stopping resource #{resource[:id]}")
               # just print out information if running a dry run, otherwise start assets
-              if not @dry_run
+              if !CfnManage.dry_run?
                 configuration = resource[:handler].stop()
                 if configuration.class == Hash
                   s3_prefix = "environment_data/resource/#{resource[:id]}"
@@ -130,13 +141,13 @@ module CfnManage
               $log.error("An exception occurred during stop operation against resource #{resource[:id]}")
               $log.error("#{e.to_s}")
               $log.error(e.backtrace.join("\n\t"))
-              if not @continue_on_error
+              if not CfnManage.continue_on_error?
                 raise e
               end
             end
           end
 
-          if not @dry_run and @wait_async
+          if not CfnManage.dry_run? and CfnManage.wait_async?
             priority.each do |resource|
               begin
                 resource[:handler].wait('stopped')
@@ -144,7 +155,7 @@ module CfnManage
                 $log.error("An exception occurred during wait operation against resource #{resource[:id]}")
                 $log.error("#{e.to_s}")
                 $log.error(e.backtrace.join("\n\t"))
-                if not @continue_on_error
+                if not CfnManage.continue_on_error?
                   raise e
                 end
               end
@@ -164,7 +175,7 @@ module CfnManage
             begin
               $log.info("Starting resource #{resource[:id]}")
               # just print out information if running a dry run, otherwise start assets
-              if not @dry_run
+              if !CfnManage.dry_run?
                 # read configuration
                 s3_prefix = "environment_data/resource/#{resource[:id]}"
                 configuration = get_object_configuration(s3_prefix)
@@ -179,13 +190,13 @@ module CfnManage
                 $log.error("An exception occurred during start operation against resource #{resource[:id]}")
                 $log.error("#{e.to_s}")
                 $log.error(e.backtrace.join("\n\t"))
-                if not @continue_on_error
+                if not CfnManage.continue_on_error?
                   raise e
                 end
             end
           end
 
-          if not @dry_run and @wait_async
+          if not CfnManage.dry_run? and CfnManage.wait_async?
             priority.each do |resource|
               begin
                 resource[:handler].wait('available')
@@ -193,7 +204,7 @@ module CfnManage
                 $log.error("An exception occurred during wait operation against resource #{resource[:id]}")
                 $log.error("#{e.to_s}")
                 $log.error(e.backtrace.join("\n\t"))
-                if not @continue_on_error
+                if not CfnManage.continue_on_error?
                   raise e
                 end
               end
@@ -208,23 +219,38 @@ module CfnManage
         resrouces = @cf_client.describe_stack_resources(stack_name: stack_name)
         resrouces['stack_resources'].each do |resource|
           start_stop_handler = nil
-          begin
+          
+          resource_id = resource['physical_resource_id']
+          resource_type = resource['resource_type']
+          priority = DEFAULT_PRIORITIES[resource_type]
+          options = {}
+          
+          if CfnManage.find_tags? && TAGGED_RESOURCES.include?(resource_type)
+            tags = CfnManage::TagFinder.new(resource_id)
+            tags.get_tags(resource_type)  
+            options = tags.options
+            priority = options[:priority] if options.has_key?(:priority)
+            $log.debug("setting options #{options} for #{resource_id}")
+          end
+          
+          begin    
             start_stop_handler = CfnManage::StartStopHandlerFactory.get_start_stop_handler(
-                resource['resource_type'],
-                resource['physical_resource_id'],
-                @skip_wait
+                resource_type,
+                resource_id,
+                options
             )
           rescue Exception => e
-            $log.error("Error creating start-stop handler for resource of type #{resource['resource_type']}" +
+            $log.error("Error creating start-stop handler for resource of type #{resource['resource_type']} " +
                 "and with id #{resource['physical_resource_id']}:#{e}")
           end
-          if not start_stop_handler.nil?
-            resource_id = resource['physical_resource_id']
+          
+          if !start_stop_handler.nil?
+            $log.debug("priority set to #{priority} for resource id: #{resource_id}, type: #{resource_type}")
             @environment_resources << {
                 id: resource_id,
-                priority: @@resource_start_priorities[resource['resource_type']],
+                priority: priority,
                 handler: start_stop_handler,
-                type: resource['resource_type']
+                type: resource_type
             }
           end
         end

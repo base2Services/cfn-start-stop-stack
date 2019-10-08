@@ -212,6 +212,21 @@ General options:
 --asg-suspend-termination
 
     Will stop instances in the autoscaling group(s) instead of the default behaviour of termination.
+    
+--asg-wait-type
+    
+    Allowed values ['HealthyInASG','Running','HealthyInTargetGroup']
+    Default: 'HealthyInASG'
+    
+    'HealthyInASG' - waits for all instances to reach a healthy state in the asg
+    'Running' - waits for all instances to reach the EC2 running state
+    'HealthyInTargetGroup' - waits for all instances to reach a healthy state in all asg assocated target groups
+    
+--tags
+
+    will query resource tags for individual resource settings.
+        `cfn_manage:priority` for prefered starting order
+    will default to defined resource order if no tag is found or resource doesn't support tags
 ```
 
 ## Environment Variables

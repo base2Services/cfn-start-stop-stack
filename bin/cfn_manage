@@ -2,6 +2,7 @@
 require 'optparse'
 require 'cfn_manage/version'
 require 'cfn_manage/cf_common'
+require 'cfn_manage/globals'
 require 'cfn_manage/cf_start_stop_environment'
 require 'logger'
 
@@ -78,13 +79,13 @@ OptionParser.new do |opts|
     $options['ALARM'] = alarm
   end
   
-  opts.on('--asg-wait-type [WAIT_TYPE]') do |type|
+  opts.on('--asg-wait-state [WAIT_STATE]') do |state|
     allows_values = ['HealthyInASG','Running','HealthyInTargetGroup']
-    if !allows_values.include? type
-      STDERR.puts("#{type} is not a valid value for `--asg-wait-type`. Use one of #{allows_values.join(',')}")
+    if !allows_values.include? state
+      STDERR.puts("#{type} is not a valid value for `--asg-wait-state`. Use one of #{allows_values.join(',')}")
       exit 1
     end
-    ENV['ASG_WAIT_TYPE'] = type
+    CfnManage.asg_wait_state = state
   end
 
   opts.on('-r [AWS_REGION]', '--region [AWS_REGION]') do |region|
@@ -95,29 +96,64 @@ OptionParser.new do |opts|
     ENV['CFN_AWS_PROFILE'] = profile
   end
 
+  # Boolean options with support for command line and environment variables
+  
   opts.on('--dry-run') do
-    ENV['DRY_RUN'] = '1'
+    CfnManage.dry_run
+  end
+  
+  if ENV['DRY_RUN'] == '1'
+    CfnManage.dry_run
   end
 
   opts.on('--continue-on-error') do
-    ENV['CFN_CONTINUE_ON_ERROR'] = '1'
+    CfnManage.continue_on_error
+  end
+  
+  if ENV['CFN_CONTINUE_ON_ERROR'] == '1'
+    CfnManage.continue_on_error
   end
 
   opts.on('--wait-async') do
-    ENV['WAIT_ASYNC'] = '1'
-    ENV['SKIP_WAIT'] = '1'
+    CfnManage.skip_wait
+    CfnManage.wait_async
+  end
+  
+  if ENV['WAIT_ASYNC'] == '1'
+    CfnManage.skip_wait
+    CfnManage.wait_async
   end
 
   opts.on('--skip-wait') do
-    ENV['SKIP_WAIT'] = '1'
+    CfnManage.skip_wait
+  end
+  
+  if ENV['SKIP_WAIT'] == '1'
+    CfnManage.skip_wait
   end
 
   opts.on('--ignore-missing-ecs-config') do
-    ENV['IGNORE_MISSING_ECS_CONFIG'] = '1'
+    CfnManage.ignore_missing_ecs_config
+  end
+  
+  if ENV['IGNORE_MISSING_ECS_CONFIG'] == '1'
+    CfnManage.ignore_missing_ecs_config
   end
 
   opts.on('--asg-suspend-termination') do
-    ENV['ASG_SUSPEND_TERMINATION'] = '1'
+    CfnManage.asg_suspend_termination
+  end
+  
+  if ENV['ASG_SUSPEND_TERMINATION'] == '1'
+    CfnManage.asg_suspend_termination
+  end
+  
+  opts.on('--tags') do
+    CfnManage.find_tags
+  end
+  
+  if ENV['CFN_TAGS'] == '1'
+    CfnManage.find_tags
   end
 
 end.parse!
