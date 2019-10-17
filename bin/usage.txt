@@ -105,9 +105,21 @@ General options:
     'HealthyInASG' - waits for all instances to reach a healthy state in the asg
     'Running' - waits for all instances to reach the EC2 running state
     'HealthyInTargetGroup' - waits for all instances to reach a healthy state in all asg assocated target groups
+
+--ecs-wait-state
     
+    Allowed values ['Running','HealthyInTargetGroup']
+    Default: 'Skip'
+    
+    'Running' - waits for all ecs services in cluster to reach the running state
+    'HealthyInTargetGroup' - waits for all ecs services in cluster to reach a healthy state in all assocated target groups
+            
 --tags
 
     will query resource tags for individual resource settings.
         `cfn_manage:priority` for prefered starting order
     will default to defined resource order if no tag is found or resource doesn't support tags
+    
+--ecs-wait-container-instances
+    
+    waits for a container instance to be active in the ecs cluster before starting services

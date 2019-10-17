@@ -209,6 +209,30 @@ Resources:
               'elasticloadbalancing:RegisterTargets', 'ec2:Describe*', 'ec2:AuthorizeSecurityGroupIngress']
             Resource: '*'
   
+  JobberTaskdefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Join ['', [!Ref 'AWS::StackName', -jobber]]
+      ContainerDefinitions:
+      - Name: jobber
+        Cpu: 10
+        Essential: true
+        Image: jobber
+        Memory: 200
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group: !Ref 'CloudwatchLogsGroup'
+            awslogs-region: !Ref 'AWS::Region'
+            awslogs-stream-prefix: jobber
+  
+  JobberService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref 'ECSCluster'
+      DesiredCount: '1'
+      TaskDefinition: !Ref 'JobberTaskdefinition'
+  
   EC2Role:
     Type: AWS::IAM::Role
     Properties:

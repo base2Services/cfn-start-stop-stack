@@ -88,6 +88,15 @@ OptionParser.new do |opts|
     CfnManage.asg_wait_state = state
   end
 
+  opts.on('--ecs-wait-state [WAIT_STATE]') do |state|
+    allows_values = ['Running','HealthyInTargetGroup']
+    if !allows_values.include? state
+      STDERR.puts("#{type} is not a valid value for `--ecs-wait-state`. Use one of #{allows_values.join(',')}")
+      exit 1
+    end
+    CfnManage.ecs_wait_state = state
+  end
+
   opts.on('-r [AWS_REGION]', '--region [AWS_REGION]') do |region|
     ENV['AWS_REGION'] = region
   end
@@ -154,6 +163,14 @@ OptionParser.new do |opts|
   
   if ENV['CFN_TAGS'] == '1'
     CfnManage.find_tags
+  end
+  
+  opts.on('--ecs-wait-container-instances') do
+    CfnManage.ecs_wait_container_instances
+  end
+  
+  if ENV['ECS_WAIT_CONTAINER_INSTANCES'] == '1'
+    CfnManage.ecs_wait_container_instances
   end
 
 end.parse!

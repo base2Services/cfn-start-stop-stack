@@ -11,8 +11,8 @@ module CfnManage
       def initialize(asg_id, options = {})
         @asg_name = asg_id
         @wait_state = options.has_key?(:wait_state) ? options[:wait_state] : CfnManage.asg_wait_state
-        @skip_wait = options.has_key?(:skip_wait) ? options[:skip_wait] : CfnManage.skip_wait? 
-        @suspend_termination = options.has_key?(:suspend_termination) ? options[:suspend_termination] : CfnManage.asg_suspend_termination?
+        @skip_wait = options.has_key?(:skip_wait) ? CfnManage.true?(options[:skip_wait]) : CfnManage.skip_wait? 
+        @suspend_termination = options.has_key?(:suspend_termination) ? CfnManage.true?(options[:suspend_termination]) : CfnManage.asg_suspend_termination?
         
         credentials = CfnManage::AWSCredentials.get_session_credentials("stopasg_#{@asg_name}")
         @asg_client = Aws::AutoScaling::Client.new(retry_limit: 20)

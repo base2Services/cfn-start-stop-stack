@@ -18,6 +18,8 @@ module CfnManage
         asg()
       when 'AWS::EC2::Instance'
         ec2()
+      when 'AWS::ECS::Cluster'
+        ecs_cluster()
       end
     end
     
@@ -45,6 +47,7 @@ module CfnManage
       })
       @tags = resp.tags
     end
+<<<<<<< HEAD
 
     def ec2()
       credentials = CfnManage::AWSCredentials.get_session_credentials("cfn_manage_get_tags")
@@ -58,6 +61,18 @@ module CfnManage
         ]
       })
       @tags = resp.tags
+=======
+      
+    def ecs_cluster()
+      credentials = CfnManage::AWSCredentials.get_session_credentials("cfn_manage_get_tags")
+      client = Aws::ECS::Client.new(credentials: credentials, retry_limit: 20)
+      resp = client.describe_clusters({
+        clusters: [@resource_id],
+        include: ["TAGS"]
+      })
+      cluster = resp.clusters.first
+      @tags = cluster.tags
+>>>>>>> support for ecs service wait states and ecs cluster tagging
     end
 
   end

@@ -2,11 +2,17 @@ module CfnManage
   
   # set default options here
   @asg_wait_state = 'HealthyInASG'
+  @ecs_wait_state = 'Skip'
   
   class << self
     
     # return the vale of our options
-    attr_accessor :asg_wait_state
+    attr_accessor :asg_wait_state, :ecs_wait_state
+    
+    # converts string based bolleans from aws tag values to bolleans
+    def true?(obj)
+      ["true","1"].include? obj.to_s.downcase
+    end
     
     # find options set on resource tags
     def find_tags
@@ -69,6 +75,15 @@ module CfnManage
     
     def continue_on_error?
       @continue_on_error
+    end
+    
+    # Wait for a container instances to join a ecs cluster
+    def ecs_wait_container_instances
+      @ecs_wait_container_instances = true
+    end
+    
+    def ecs_wait_container_instances?
+      @ecs_wait_container_instances
     end
     
   end
