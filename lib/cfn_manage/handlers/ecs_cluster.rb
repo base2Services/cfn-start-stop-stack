@@ -148,13 +148,15 @@ module CfnManage
       end
       
       def wait_till_running(service_arn)
+        service_name = service_arn.split('/').last
         service = @ecs_client.describe_services(services:[service_arn], cluster: @cluster).services.first
-        
+                
         if service.running_count > 0
-          $log.info("ecs service #{service_arn} has #{service.running_count} running tasks")
+          $log.info("ecs service #{service_name} has #{service.running_count} running tasks")
+          return true
         end  
         
-        $log.info("waiting for ecs service #{service_arn} to reach a running state")
+        $log.info("waiting for ecs service #{service_name} to reach a running state")
         return false
       end
       
