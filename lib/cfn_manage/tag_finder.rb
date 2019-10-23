@@ -16,6 +16,8 @@ module CfnManage
       case resource_type
       when 'AWS::AutoScaling::AutoScalingGroup'
         asg()
+      when 'AWS::EC2::Instance'
+        ec2()
       end
     end
     
@@ -43,7 +45,20 @@ module CfnManage
       })
       @tags = resp.tags
     end
-      
+
+    def ec2()
+      credentials = CfnManage::AWSCredentials.get_session_credentials("cfn_manage_get_tags")
+      client = Aws::EC2::Client.new(credentials: credentials, retry_limit: 20)
+      resp = client.describe_tags({
+        filters: [
+          {
+            name: "resource-id", 
+            values: [@resource_id]
+          }
+        ]
+      })
+      @tags = resp.tags
+    end
 
   end
 end

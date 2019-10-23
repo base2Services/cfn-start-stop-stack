@@ -26,7 +26,7 @@ module CfnManage
       }
       
       TAGGED_RESOURCES = %w(
-        AWS::AutoScaling::AutoScalingGroup
+        AWS::AutoScaling::AutoScalingGroup AWS::EC2::Instance
       )
 
       def initialize()
