@@ -201,7 +201,8 @@ module CfnManage
         
         asg_status = asg_curr_details.auto_scaling_groups.first
         health_status = asg_status.instances.collect { |inst| inst.health_status }
-        
+        $log.info("ASG #{@asg_name} health status is currently #{health_status}")
+
         if health_status.empty?
           $log.info("ASG #{@asg_name} has not started any instances yet")
           return false
@@ -212,7 +213,7 @@ module CfnManage
           return true
         end
           
-        unhealthy = @asg_status.instances.select {|inst| inst.health_status == "Unhealthy" }.collect {|inst| inst.instance_id }
+        unhealthy = asg_status.instances.select {|inst| inst.health_status == "Unhealthy" }.collect {|inst| inst.instance_id }
         $log.info("waiting for instances #{unhealthy} to become healthy in asg #{@asg_name}")
         return false
         
