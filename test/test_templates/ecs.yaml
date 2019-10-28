@@ -178,7 +178,9 @@ Resources:
           
   service:
     Type: AWS::ECS::Service
-    DependsOn: ALBListener
+    DependsOn: 
+      - ALBListener
+      - ECSAutoScalingGroup
     Properties:
       Cluster: !Ref 'ECSCluster'
       DesiredCount: '1'
@@ -228,6 +230,7 @@ Resources:
   
   JobberService:
     Type: AWS::ECS::Service
+    DependsOn: ECSAutoScalingGroup
     Properties:
       Cluster: !Ref 'ECSCluster'
       DesiredCount: '1'
