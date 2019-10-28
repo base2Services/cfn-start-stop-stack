@@ -19,6 +19,7 @@ $options['AWS_ASSUME_ROLE'] = ENV['AWS_ASSUME_ROLE']
 
 # global logger
 $log = Logger.new(STDOUT)
+$log.level = Logger::INFO
 
 # always flush output
 STDOUT.sync = true
@@ -113,6 +114,14 @@ OptionParser.new do |opts|
   
   if ENV['DRY_RUN'] == '1'
     CfnManage.dry_run
+  end
+  
+  opts.on('--debug') do
+    $log.level = Logger::DEBUG
+  end
+  
+  if ENV['CFN_DEBUG'] == '1'
+    $log.level = Logger::DEBUGß
   end
 
   opts.on('--continue-on-error') do

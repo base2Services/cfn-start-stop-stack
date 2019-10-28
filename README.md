@@ -193,6 +193,10 @@ General options:
     Applicable only to [start|stop-environment] commands. If dry run is enabled
     info about assets being started / stopped will ne only printed to standard output,
     without any action taken.
+    
+--debug
+
+    Displays debug logs
 
 --continue-on-error
 
@@ -275,6 +279,8 @@ There are command line switch counter parts for all of the
 `CFN_TAGS` as env var (set to '1' to enable) or `--tags` as CLI switch
 
 `ECS_WAIT_CONTAINER_INSTANCES` as env var (set to '1' to enable) or `--ecs-wait-container-instances` as CLI switch
+
+`CFN_DEBUG` as env var (set to '1' to enable) or `--debug` as CLI switch
 
 ## AWS Resource Tags
 

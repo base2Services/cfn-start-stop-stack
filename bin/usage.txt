@@ -71,6 +71,10 @@ General options:
     Applicable only to [start|stop-environment] commands. If dry run is enabled
     info about assets being started / stopped will ne only printed to standard output,
     without any action taken.
+    
+--debug
+
+    Displays debug logs
 
 --continue-on-error
 
