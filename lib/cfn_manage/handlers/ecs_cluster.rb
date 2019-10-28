@@ -56,7 +56,10 @@ module CfnManage
 
         end
         
-        if !@skip_wait
+        if desired_count == 0
+          # skip wait if desired count is purposfully set to 0
+          $log.info("Desired capacity is 0, skipping wait for ecs service #{service.service_name}")
+        elsif !@skip_wait
           @services.each do |service_arn|
             wait(@wait_state,service_arn)
           end

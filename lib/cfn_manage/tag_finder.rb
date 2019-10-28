@@ -47,7 +47,6 @@ module CfnManage
       })
       @tags = resp.tags
     end
-<<<<<<< HEAD
 
     def ec2()
       credentials = CfnManage::AWSCredentials.get_session_credentials("cfn_manage_get_tags")
@@ -61,7 +60,7 @@ module CfnManage
         ]
       })
       @tags = resp.tags
-=======
+    end
       
     def ecs_cluster()
       credentials = CfnManage::AWSCredentials.get_session_credentials("cfn_manage_get_tags")
@@ -72,7 +71,6 @@ module CfnManage
       })
       cluster = resp.clusters.first
       @tags = cluster.tags
->>>>>>> support for ecs service wait states and ecs cluster tagging
     end
 
   end

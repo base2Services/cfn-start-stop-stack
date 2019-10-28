@@ -130,7 +130,11 @@ module CfnManage
           
         end
         
-        if @skip_wait && @suspend_termination
+        if configuration['desired_capacity'] == 0
+          # if ASG desired count is purposfully set to 0 and we want to wait for other ASG's
+          # int the stack, then we need to skip wait for this ASG.
+          $log.info("Desired capacity is 0, skipping wait for asg #{@asg_name}")
+        elsif @skip_wait && @suspend_termination
           # If wait is skipped we still need to wait until the instances are healthy in the asg
           # before resuming the processes. This will avoid the asg terminating the instances.
           wait('HealthyInASG')
