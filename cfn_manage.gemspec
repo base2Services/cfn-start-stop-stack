@@ -15,6 +15,8 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/base2Services/cfn-start-stop-stack/blob/master/README.md'
   spec.license       = 'MIT'
   spec.executables << 'cfn_manage'
+  
+  spec.required_ruby_version = '~> 2.5'
 
   spec.add_runtime_dependency 'aws-sdk-core', '>=3.39.0','<4'
   spec.add_runtime_dependency 'aws-sdk-s3', '~> 1', '<2'
