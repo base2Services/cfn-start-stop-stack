@@ -63,7 +63,7 @@ In case of some configuration data being lost, script will continue and work wit
 removed from S3, but rds data persists will results in RDS instances being started)
 
 Order of operations is supported at this point as hardcoded weights per resource type. Pull Requests are welcome
-for supporting dynamic discovery of order of execution - resource tags or local configuration file override are some of
+for supporting dynamic discovery of order of execution - local configuration file override is one of
 the possible sources.
 
 
@@ -112,6 +112,12 @@ it will get converted to Multi-AZ prior being started
 **Stop** operation will set spot fleet target to capacity to 0
 
 **Start** operation will restore spot fleet target to capacity to what was set prior the stack being stopped.
+
+#### AWS::ECS::Cluster
+
+**Stop** operation will query all services running in the cluster and set desired capacity to 0
+
+**Start** operation will query all services assocated with the cluster restore desired capacity to what was set prior the stack being stopped.
 
 ## CLI usage
 
@@ -187,6 +193,10 @@ General options:
     Applicable only to [start|stop-environment] commands. If dry run is enabled
     info about assets being started / stopped will ne only printed to standard output,
     without any action taken.
+    
+--debug
+
+    Displays debug logs
 
 --continue-on-error
 
@@ -213,7 +223,7 @@ General options:
 
     Will stop instances in the autoscaling group(s) instead of the default behaviour of termination.
     
---asg-wait-type
+--asg-wait-state
     
     Allowed values ['HealthyInASG','Running','HealthyInTargetGroup']
     Default: 'HealthyInASG'
@@ -221,12 +231,24 @@ General options:
     'HealthyInASG' - waits for all instances to reach a healthy state in the asg
     'Running' - waits for all instances to reach the EC2 running state
     'HealthyInTargetGroup' - waits for all instances to reach a healthy state in all asg assocated target groups
+
+--ecs-wait-state
     
+    Allowed values ['Running','HealthyInTargetGroup']
+    Default: 'Skip'
+    
+    'Running' - waits for all ecs services in cluster to reach the running state
+    'HealthyInTargetGroup' - waits for all ecs services in cluster to reach a healthy state in all assocated target groups
+            
 --tags
 
     will query resource tags for individual resource settings.
         `cfn_manage:priority` for prefered starting order
     will default to defined resource order if no tag is found or resource doesn't support tags
+    
+--ecs-wait-container-instances
+    
+    waits for a container instance to be active in the ecs cluster before starting services
 ```
 
 ## Environment Variables
@@ -245,6 +267,41 @@ There are command line switch counter parts for all of the
 `DRY_RUN` as env var (set to '1' to enable) or `--dry-run` as CLI switch
 
 `IGNORE_MISSING_ECS_CONFIG` as env var (set to '1' to enable) or `--ignore-missing-ecs-config` as CLI switch
+
+`CFN_CONTINUE_ON_ERROR` as env var (set to '1' to enable) or `--continue-on-error` as CLI switch
+
+`SKIP_WAIT` as env var (set to '1' to enable) or `--skip-wait` as CLI switch
+
+`WAIT_ASYNC` as env var (set to '1' to enable) or `--wait-async` as CLI switch
+
+`ASG_SUSPEND_TERMINATION` as env var (set to '1' to enable) or `--asg-suspend-termination` as CLI switch
+
+`CFN_TAGS` as env var (set to '1' to enable) or `--tags` as CLI switch
+
+`ECS_WAIT_CONTAINER_INSTANCES` as env var (set to '1' to enable) or `--ecs-wait-container-instances` as CLI switch
+
+`CFN_DEBUG` as env var (set to '1' to enable) or `--debug` as CLI switch
+
+## AWS Resource Tags
+
+will query resource tags for individual resource settings. please see bellow the list of resources currently supported by tags and their options.
+
+#### AWS::AutoScaling::AutoScalingGroup'
+
+```yaml
+cfn_manage:wait_state: 'HealthyInASG'
+cfn_manage:skip_wait: true
+cfn_manage:suspend_termination: true
+```
+
+#### AWS::ECS::Cluster
+
+```yaml
+cfn_manage:wait_state: 'Running'
+cfn_manage:skip_wait: true
+cfn_manage:wait_container_instances: true
+cfn_manage:ignore_missing_ecs_config: true
+```
 
 ## Release process
 

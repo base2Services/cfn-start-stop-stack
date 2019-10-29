@@ -18,6 +18,8 @@ module CfnManage
         asg()
       when 'AWS::EC2::Instance'
         ec2()
+      when 'AWS::ECS::Cluster'
+        ecs_cluster()
       end
     end
     
@@ -58,6 +60,17 @@ module CfnManage
         ]
       })
       @tags = resp.tags
+    end
+      
+    def ecs_cluster()
+      credentials = CfnManage::AWSCredentials.get_session_credentials("cfn_manage_get_tags")
+      client = Aws::ECS::Client.new(credentials: credentials, retry_limit: 20)
+      resp = client.describe_clusters({
+        clusters: [@resource_id],
+        include: ["TAGS"]
+      })
+      cluster = resp.clusters.first
+      @tags = cluster.tags
     end
 
   end
