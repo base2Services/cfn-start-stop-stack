@@ -71,7 +71,7 @@ module CfnManage
         options = {}
         
         if CfnManage.find_tags?
-          tags = CfnManage::TagFiner.new(resource_id)
+          tags = CfnManage::TagFinder.new(resource_id)
           tags.get_tags(resource_type)  
           priority = !tags.priority.nil? ? tags.priority : priority
           options = tags.options
@@ -98,7 +98,7 @@ module CfnManage
         options = {}
         
         if CfnManage.find_tags?
-          tags = CfnManage::TagFiner.new(resource_id)
+          tags = CfnManage::TagFinder.new(resource_id)
           tags.get_tags(resource_type)  
           priority = !tags.priority.nil? ? tags.priority : priority
           options = tags.options

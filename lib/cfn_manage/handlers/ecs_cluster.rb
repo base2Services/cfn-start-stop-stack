@@ -38,12 +38,16 @@ module CfnManage
           end
 
           if configuration.has_key?(service.service_name)
-            desired_count = configuration[service.service_name]['desired_count']
+            desired_count = configuration[service.service_name].has_key?('desired_count') ? configuration[service.service_name]['desired_count'] : 0
+            if desired_count == 0
+              $log.info("Desired count is #{desired_count}, skipping starting of service #{service.service_name}")
+              next
+            end
           elsif CfnManage.ignore_missing_ecs_config?
-            $log.info("ECS service #{service.service_name} wasn't previosly stopped by cfn_manage. Option --ignore-missing-ecs-config set and setting desired count to 1")
+            $log.info("ECS service #{service.service_name} wasn't previously stopped by cfn_manage. Option --ignore-missing-ecs-config set and setting desired count to 1")
             desired_count = 1
           else
-            $log.warn("ECS service #{service.service_name} wasn't previosly stopped by cfn_manage. Skipping ...")
+            $log.warn("ECS service #{service.service_name} wasn't previously stopped by cfn_manage. Skipping ...")
             next
           end
 
@@ -55,15 +59,13 @@ module CfnManage
           })
 
         end
-        
-        if desired_count == 0
-          # skip wait if desired count is purposfully set to 0
-          $log.info("Desired capacity is 0, skipping wait for ecs service #{service.service_name}")
-        elsif !@skip_wait
+
+        if !@skip_wait
           @services.each do |service_arn|
             wait(@wait_state,service_arn)
           end
         end
+        
       end
 
       def stop
@@ -94,7 +96,7 @@ module CfnManage
       def wait(type,service_arn=nil)
         
         if service_arn.nil?
-          $log.warn("unable to wait for #{service_arn} service")
+          $log.warn("Unable to wait for #{service_arn} service")
           return
         end
         
@@ -107,8 +109,11 @@ module CfnManage
             success = wait_till_running(service_arn)
           when 'HealthyInTargetGroup'
             success = wait_till_healthy_in_target_group(service_arn)
+          when 'Skip'
+            $log.info("Skipping wait for #{service_arn} service")
+            break
           else
-            $log.warn("unknown ecs service wait type #{type}. skipping...")
+            $log.warn("Unknown ECS service wait type #{type}. Skipping...")
             break
           end
           
