@@ -39,6 +39,10 @@ module CfnManage
 
           if configuration.has_key?(service.service_name)
             desired_count = configuration[service.service_name].has_key?('desired_count') ? configuration[service.service_name]['desired_count'] : 0
+            if desired_count == 0
+              $log.info("Desired count is #{desired_count}, skipping wait for service #{service.service_name}")
+              next
+            end
           elsif CfnManage.ignore_missing_ecs_config?
             $log.info("ECS service #{service.service_name} wasn't previously stopped by cfn_manage. Option --ignore-missing-ecs-config set and setting desired count to 1")
             desired_count = 1
@@ -54,15 +58,12 @@ module CfnManage
             cluster: @cluster
           })
 
-          if desired_count == 0
-            # skip wait if desired count is purposfully set to 0
-            $log.info("Desired capacity is 0, skipping wait for ecs service #{service.service_name}")
-          elsif !@skip_wait
-            @services.each do |service_arn|
-              wait(@wait_state,service_arn)
-            end
-          end
+        end
 
+        if !@skip_wait
+          @services.each do |service_arn|
+            wait(@wait_state,service_arn)
+          end
         end
         
       end
@@ -95,7 +96,7 @@ module CfnManage
       def wait(type,service_arn=nil)
         
         if service_arn.nil?
-          $log.warn("unable to wait for #{service_arn} service")
+          $log.warn("Unable to wait for #{service_arn} service")
           return
         end
         
@@ -108,8 +109,11 @@ module CfnManage
             success = wait_till_running(service_arn)
           when 'HealthyInTargetGroup'
             success = wait_till_healthy_in_target_group(service_arn)
+          when 'Skip'
+            $log.info("Skipping wait for #{service_arn} service")
+            break
           else
-            $log.warn("unknown ecs service wait type #{type}. skipping...")
+            $log.warn("Unknown ECS service wait type #{type}. Skipping...")
             break
           end
           
