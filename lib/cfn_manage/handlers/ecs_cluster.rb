@@ -40,7 +40,7 @@ module CfnManage
           if configuration.has_key?(service.service_name)
             desired_count = configuration[service.service_name].has_key?('desired_count') ? configuration[service.service_name]['desired_count'] : 0
             if desired_count == 0
-              $log.info("Desired count is #{desired_count}, skipping wait for service #{service.service_name}")
+              $log.info("Desired count is #{desired_count}, skipping starting of service #{service.service_name}")
               next
             end
           elsif CfnManage.ignore_missing_ecs_config?
