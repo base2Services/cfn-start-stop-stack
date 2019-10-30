@@ -38,12 +38,12 @@ module CfnManage
           end
 
           if configuration.has_key?(service.service_name)
-            desired_count = configuration[service.service_name]['desired_count']
+            desired_count = configuration[service.service_name].has_key?('desired_count') ? configuration[service.service_name]['desired_count'] : 0
           elsif CfnManage.ignore_missing_ecs_config?
-            $log.info("ECS service #{service.service_name} wasn't previosly stopped by cfn_manage. Option --ignore-missing-ecs-config set and setting desired count to 1")
+            $log.info("ECS service #{service.service_name} wasn't previously stopped by cfn_manage. Option --ignore-missing-ecs-config set and setting desired count to 1")
             desired_count = 1
           else
-            $log.warn("ECS service #{service.service_name} wasn't previosly stopped by cfn_manage. Skipping ...")
+            $log.warn("ECS service #{service.service_name} wasn't previously stopped by cfn_manage. Skipping ...")
             next
           end
 
@@ -54,16 +54,17 @@ module CfnManage
             cluster: @cluster
           })
 
+          if desired_count == 0
+            # skip wait if desired count is purposfully set to 0
+            $log.info("Desired capacity is 0, skipping wait for ecs service #{service.service_name}")
+          elsif !@skip_wait
+            @services.each do |service_arn|
+              wait(@wait_state,service_arn)
+            end
+          end
+
         end
         
-        if desired_count == 0
-          # skip wait if desired count is purposfully set to 0
-          $log.info("Desired capacity is 0, skipping wait for ecs service #{service.service_name}")
-        elsif !@skip_wait
-          @services.each do |service_arn|
-            wait(@wait_state,service_arn)
-          end
-        end
       end
 
       def stop
