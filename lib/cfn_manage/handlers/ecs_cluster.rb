@@ -62,6 +62,13 @@ module CfnManage
 
         if !@skip_wait
           @services.each do |service_arn|
+            service = @ecs_client.describe_services(services:[service_arn], cluster: @cluster).services.first
+
+            if service.desired_count == 0
+              $log.info("ECS service #{service.service_name} was not started so will not wait for it")
+              next
+            end
+            
             wait(@wait_state,service_arn)
           end
         end
