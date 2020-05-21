@@ -81,12 +81,20 @@ module CfnManage
 
         # stop rds instance and wait for it to be fully stopped
         $log.info("Stopping instance #{@instance_id}")
-        @rds_client.stop_db_instance({ db_instance_identifier: @instance_id })
+        begin
+          @rds_client.stop_db_instance({ db_instance_identifier: @instance_id })
+        rescue Aws::RDS::Errors::InvalidDBInstanceState => e
+          if e.message == "Cannot stop or start a Read-Replica instance"
+            $log.warn("Skipping due to error: #{e.message}") 
+            return
+          else
+            raise e
+          end
+        end
         unless CfnManage.skip_wait?
           $log.info("Waiting db instance to be stopped #{@instance_id}")
           wait('stopped')
         end
-
         return configuration
       end
 
