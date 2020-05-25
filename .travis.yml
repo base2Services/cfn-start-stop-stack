@@ -3,8 +3,10 @@ dist: trusty
 language: ruby
 rvm:
   - 2.5
+before_install:
+  - gem install -v 2.0.2 bundler --no-rdoc --no-ri
+  - bundle _2.0.2_ install
 script:
-  - bundle install
   - bundle exec rake spec
   - gem build cfn_manage.gemspec
   - gem install cfn_manage-*.gem
