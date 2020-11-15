@@ -291,6 +291,7 @@ will query resource tags for individual resource settings. please see bellow the
 ```yaml
 cfn_manage:wait_state: 'HealthyInASG'
 cfn_manage:skip_wait: true
+cfn_manage:priority: 200
 cfn_manage:suspend_termination: true
 ```
 
@@ -299,6 +300,7 @@ cfn_manage:suspend_termination: true
 ```yaml
 cfn_manage:wait_state: 'Running'
 cfn_manage:skip_wait: true
+cfn_manage:priority: 200
 cfn_manage:wait_container_instances: true
 cfn_manage:ignore_missing_ecs_config: true
 ```
