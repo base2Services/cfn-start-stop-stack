@@ -1,0 +1,25 @@
+name: test and build gem
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: test + build
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: set up ruby 2.7
+      uses: actions/setup-ruby@v1
+      with:
+        ruby-version: 2.7.x
+    - name: rspec
+      run: |
+        gem install rspec
+        rspec
+    - name: build gem
+      run: |
+        gem build cfn_manage.gemspec
