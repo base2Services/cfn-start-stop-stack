@@ -37,13 +37,9 @@ module CfnManage
         @s3_bucket = ENV['SOURCE_BUCKET']
         @cf_client = Aws::CloudFormation::Client.new(retry_limit: 20)
         @credentials = CfnManage::AWSCredentials.get_session_credentials('start_stop_environment')
-        if not @credentials.nil?
+        unless @credentials.credentials.nil?
           @cf_client = Aws::CloudFormation::Client.new(credentials: @credentials, retry_limit: 20)
         end
-      rescue NoMethodError => e
-        puts "Got No Method Error on CloudFormation::initialize, this often means that you're missing a AWS_DEFAULT_REGION"
-      rescue Aws::Sigv4::Errors::MissingCredentialsError => e
-        puts "Got Missing Credentials Error on CloudFormation::initialize, this often means that AWS_PROFILE is unset, or no default credentials were provided."
       end
 
 
