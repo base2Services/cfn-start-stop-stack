@@ -28,6 +28,10 @@ module CfnManage
       credentials = Aws::InstanceProfileCredentials.new(retries: 2, http_open_timeout:1)
       return credentials unless credentials.credentials.access_key_id.nil?
 
+      # check for ECS task credentials available
+      credentials = Aws::ECSCredentials.new(retries: 2)
+      return credentials unless credentials.credentials.access_key_id.nil?
+
       # use default profile
       return Aws::SharedCredentials.new()
 
