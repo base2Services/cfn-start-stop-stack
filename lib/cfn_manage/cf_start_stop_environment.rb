@@ -33,7 +33,11 @@ module CfnManage
 
       def initialize()
         @environment_resources = []
-        @s3_client = Aws::S3::Client.new(retry_limit: 20)
+        s3_args = {retry_limit: 20}
+        if ENV.has_key?('CFN_S3_REGION')
+          s3_args[:region] = ENV['CFN_S3_REGION']
+        end
+        @s3_client =Aws::S3::Client.new(s3_args)
         @s3_bucket = ENV['SOURCE_BUCKET']
         @cf_client = Aws::CloudFormation::Client.new(retry_limit: 20)
         @credentials = CfnManage::AWSCredentials.get_session_credentials('start_stop_environment')

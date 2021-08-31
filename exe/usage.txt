@@ -50,13 +50,16 @@ General options:
 
 --source-bucket [BUCKET]
 
-    Pucket used to store / pull information from
+    Bucket used to store / pull information from
+
+--s3-region [AWS_REGION]
+
+    AWS Region to use when making accessing the s3 source bucket if in a different region to the stack
 
 --aws-role [ROLE_ARN]
 
     AWS Role to assume when performing operations. Any reads and
     write to source bucket will be performed outside of this role
-
 
 -r [AWS_REGION], --region [AWS_REGION]
 

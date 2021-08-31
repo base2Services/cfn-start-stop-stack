@@ -102,6 +102,10 @@ OptionParser.new do |opts|
     ENV['AWS_REGION'] = region
   end
 
+  opts.on('--s3-region [AWS_REGION]') do |region|
+    ENV['CFN_S3_REGION'] = region
+  end
+
   opts.on('-p [AWS_PROFILE]', '--profile [AWS_PROFILE]') do |profile|
     ENV['CFN_AWS_PROFILE'] = profile
   end
