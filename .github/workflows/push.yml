@@ -2,8 +2,9 @@ name: build image
 on:
   push:
     branches:
-      - master
-      - feature/*
+    - master
+    - feature/*
+
     
 jobs:
   build:
