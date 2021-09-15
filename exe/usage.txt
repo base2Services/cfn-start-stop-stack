@@ -54,7 +54,7 @@ General options:
 
 --s3-region [AWS_REGION]
 
-    AWS Region to use when making accessing the s3 source bucket if in a different region to the stack
+    AWS Region to use when source bucket is in a different region to the resource
 
 --aws-role [ROLE_ARN]
 
