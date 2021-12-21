@@ -44,6 +44,10 @@ OptionParser.new do |opts|
     $options['STACK_NAME'] = stack
   end
 
+  opts.on('--stack-tag [STACK_TAG]') do |stack_tag|
+    $options['STACK_TAG'] = stack_tag
+  end
+
   opts.on('--asg-name [ASG]') do |asg|
     $options['ASG'] = asg
   end
@@ -251,7 +255,15 @@ when 'start-transfer-server'
 
   # stack commands
   when 'stop-environment'
-    CfnManage::CloudFormation::EnvironmentRunStop.new().stop_environment($options['STACK_NAME'])
+    if $options['STACK_NAME']
+      CfnManage::CloudFormation::EnvironmentRunStop.new().stop_environment($options['STACK_NAME'], 'stack')
+    elsif $options['STACK_TAG']
+      CfnManage::CloudFormation::EnvironmentRunStop.new().stop_environment($options['STACK_TAG'], 'tag')
+    end
   when 'start-environment'
-    CfnManage::CloudFormation::EnvironmentRunStop.new().start_environment($options['STACK_NAME'])
+    if $options['STACK_NAME']
+      CfnManage::CloudFormation::EnvironmentRunStop.new().start_environment($options['STACK_NAME'], 'stack')
+    elsif $options['STACK_TAG']
+      CfnManage::CloudFormation::EnvironmentRunStop.new().start_environment($options['STACK_TAG'], 'tag')
+    end
 end

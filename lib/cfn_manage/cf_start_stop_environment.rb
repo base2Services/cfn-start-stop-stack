@@ -43,7 +43,64 @@ module CfnManage
       end
 
 
-      def start_environment(stack_name)
+      def start_environment(arg, arg_type)
+        
+        stacks = []
+
+        if arg_type == 'tag'
+          $log.info("Stack Tag #{arg} provided, searching for stacks with matching tag")
+          lookup_results = stack_tag_lookup(arg)
+          stacks.concat(lookup_results)
+        elsif arg_type == 'stack'
+          stacks.push(arg)
+        end
+        
+        $log.info("List of CloudFormation stacks to be started: #{stacks}")
+        stacks.each { |stack| 
+          start_stack(stack)
+        }
+      end
+
+
+      def stop_environment(arg, arg_type)
+        
+        stacks = []
+
+        if arg_type == 'tag'
+          $log.info("Stack Tag #{arg} provided, searching for stacks with matching tag")
+          lookup_results = stack_tag_lookup(arg)
+          stacks.concat(lookup_results)
+        elsif arg_type == 'stack'
+          stacks.push(arg)
+        end
+        
+        $log.info("List of CloudFormation stacks to be stopped: #{stacks}")
+        stacks.each { |stack| 
+          stop_stack(stack)
+        }
+      end
+
+      def stack_tag_lookup(tag)
+
+        lookup_results = []
+
+        tag_key = tag.split('=')[0]
+        tag_value = tag.split('=')[1]
+
+        cf_resource = Aws::CloudFormation::Resource.new()
+        stack_collection = cf_resource.stacks.each { |stack| 
+          next if !stack.root_id.nil?
+          stack.tags.each { |tag| 
+            if tag.key == tag_key and tag.value == tag_value
+              $log.info("Stack found with matching tag: #{stack.stack_name}")
+              lookup_results.push(stack.stack_name)
+            end
+          }
+        }
+        return lookup_results
+      end
+
+      def start_stack(stack_name)
         $log.info("Starting environment #{stack_name}")
         Common.visit_stack(@cf_client, stack_name, method(:collect_resources), true)
         do_start_assets
@@ -52,8 +109,7 @@ module CfnManage
         $log.info("Environment #{stack_name} started")
       end
 
-
-      def stop_environment(stack_name)
+      def stop_stack(stack_name)
         $log.info("Stopping environment #{stack_name}")
         Common.visit_stack(@cf_client, stack_name, method(:collect_resources), true)
         do_stop_assets
