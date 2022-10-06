@@ -127,3 +127,7 @@ General options:
 --ecs-wait-container-instances
     
     waits for a container instance to be active in the ecs cluster before starting services
+
+--ec2-hibernate
+
+    Hibernates ec2 instance if the instance was enabled for hibernation at launch. If the instance cannot hibernate successfully, a normal shutdown occurs.

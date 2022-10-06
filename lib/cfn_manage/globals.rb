@@ -3,11 +3,12 @@ module CfnManage
   # set default options here
   @asg_wait_state = 'HealthyInASG'
   @ecs_wait_state = 'Skip'
+  @ec2_hibernate = false
   
   class << self
     
     # return the vale of our options
-    attr_accessor :asg_wait_state, :ecs_wait_state
+    attr_accessor :asg_wait_state, :ecs_wait_state, :ec2_hibernate
     
     # converts string based bolleans from aws tag values to bolleans
     def true?(obj)
