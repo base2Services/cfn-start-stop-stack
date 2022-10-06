@@ -6,6 +6,7 @@ module CfnManage
     class Ec2
 
       def initialize(instance_id, options = {})
+        @hibernate = options.has_key?(:ec2_hibernate) ? options[:ec2_hibernate] : CfnManage.ec2_hibernate
         credentials = CfnManage::AWSCredentials.get_session_credentials("stoprun_#{instance_id}")
         ec2_client = Aws::EC2::Client.new(credentials: credentials, retry_limit: 20)
         @instance = Aws::EC2::Resource.new(client: ec2_client, retry_limit: 20).instance(instance_id)
@@ -26,8 +27,14 @@ module CfnManage
           $log.info("Instance #{@instance_id} already stopping or stopped")
           return
         end
-        $log.info("Stopping instance #{@instance_id}")
-        @instance.stop()
+        
+        if @hibernate
+          $log.info("Stopping instance #{@instance_id} with hibernation")
+          @instance.stop({hibernate: @hibernate})
+        else
+          $log.info("Stopping instance #{@instance_id}")
+          @instance.stop()
+        end
 
         # empty configuration for ec2 instances
         return {}

@@ -186,6 +186,15 @@ OptionParser.new do |opts|
     CfnManage.ecs_wait_container_instances
   end
 
+  opts.on('--ec2-hibernate') do
+    CfnManage.ec2_hibernate = true
+    puts "ec2 hibernate enabled : #{CfnManage.ec2_hibernate}"
+  end
+  
+  if ENV['EC2_HIBERNATE'] == '1'
+    CfnManage.ec2_hibernate = true
+  end
+
 end.parse!
 
 command = ARGV[0]
