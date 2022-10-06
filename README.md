@@ -249,6 +249,10 @@ General options:
 --ecs-wait-container-instances
     
     waits for a container instance to be active in the ecs cluster before starting services
+
+--ec2-hibernate
+
+    Hibernates ec2 instance if the instance was enabled for hibernation at launch. If the instance cannot hibernate successfully, a normal shutdown occurs.
 ```
 
 ## Environment Variables
@@ -282,6 +286,8 @@ There are command line switch counter parts for all of the
 
 `CFN_DEBUG` as env var (set to '1' to enable) or `--debug` as CLI switch
 
+`EC2_HIBERNATE` as env var (set to '1' to enable) or `--ec2-hibernate` as CLI switch
+
 ## AWS Resource Tags
 
 will query resource tags for individual resource settings. please see bellow the list of resources currently supported by tags and their options.
@@ -303,6 +309,13 @@ cfn_manage:skip_wait: true
 cfn_manage:priority: 200
 cfn_manage:wait_container_instances: true
 cfn_manage:ignore_missing_ecs_config: true
+```
+
+
+#### AWS::EC2::Instance
+
+```yaml
+cfn_manage:ec2_hibernate: true
 ```
 
 ## Release process
