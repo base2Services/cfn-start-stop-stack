@@ -1,6 +1,6 @@
 FROM ruby:2.7-slim
 
-ARG CFN_MANAGE_VERSION=0.8.3
+ARG CFN_MANAGE_VERSION=*
 
 RUN apt-get update && apt-get install -y git && \
     useradd -ms /bin/bash -u 1000 cfn-manage
