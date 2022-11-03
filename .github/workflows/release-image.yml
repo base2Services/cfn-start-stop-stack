@@ -29,5 +29,5 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ghcr.io/base2services/cfn_manage:${{ github.event.release.tag_name }},ghcr.io/base2services/cfn_manage:latest
+        tags: ghcr.io/base2services/cfn-manage:${{ github.event.release.tag_name }},ghcr.io/base2services/cfn-manage:latest
         build-args: CFN_MANAGE_VERSION=${{ github.event.release.tag_name }}
