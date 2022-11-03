@@ -2,6 +2,8 @@ FROM ruby:2.7-slim
 
 ARG CFN_MANAGE_VERSION=*
 
+LABEL "org.opencontainers.image.source"="https://github.com/base2Services/cfn-start-stop-stack"
+
 RUN apt-get update && apt-get install -y git && \
     useradd -ms /bin/bash -u 1000 cfn-manage
 
