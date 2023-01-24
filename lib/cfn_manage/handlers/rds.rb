@@ -7,7 +7,7 @@ module CfnManage
 
       def initialize(instance_id, options = {})
         @instance_id = instance_id
-        @excluded_engines = %w(aurora aurora-mysql aurora-postgresql) # RDS list of exluded engines that don't support RDS stop start
+        @excluded_engines = %w(aurora aurora-mysql aurora-postgresql) # RDS list of excluded engines that don't support RDS stop start
         credentials = CfnManage::AWSCredentials.get_session_credentials("startstoprds_#{instance_id}")
         @rds_client = Aws::RDS::Client.new(retry_limit: 20)
         if credentials != nil
@@ -35,14 +35,14 @@ module CfnManage
 
           # wait instance to become available
           unless CfnManage.skip_wait?
-            $log.info("Waiting db instance to become available #{@instance_id}")
+            $log.info("Waiting for db instance to become available #{@instance_id}")
             wait('available')
           end
         else
           wait('available') unless CfnManage.skip_wait?
         end
 
-        # convert rds instance to mutli-az if required
+        # convert rds instance to multi-az if required
         if configuration['is_multi_az']
           $log.info("Converting to Multi-AZ instance after start (instance #{@instance_id})")
           set_rds_instance_multi_az( true)
@@ -54,15 +54,15 @@ module CfnManage
         configuration = {
             is_multi_az: @rds_instance.multi_az
         }
-        # RDS list of exluded engines that don't support RDS stop start
+        # RDS list of excluded engines that don't support RDS stop start
         if @excluded_engines.include? @rds_instance.engine
-           $log.info("RDS Instance #{@instance_id} engine is #{@rds_instance.engine} and cannot be stoped by instance.")
+           $log.info("RDS Instance #{@instance_id} engine is #{@rds_instance.engine} and cannot be stopped by instance.")
            return configuration
         end
 
         # check if available
         if @rds_instance.db_instance_status != 'available'
-          $log.warn("RDS Instance #{@instance_id} not in available state, and thus can not be stopped")
+          $log.warn("RDS Instance #{@instance_id} is not in available state, and thus cannot be stopped")
           $log.warn("RDS Instance #{@instance_id} state: #{@rds_instance.db_instance_status}")
           return configuration
         end
@@ -73,7 +73,7 @@ module CfnManage
           return configuration
         end
 
-        #check if mutli-az RDS. if so, convert to single-az
+        #check if multi-az RDS. if so, convert to single-az
         if @rds_instance.multi_az
           $log.info("Converting to Non-Multi-AZ instance before stop (instance #{@instance_id}")
           set_rds_instance_multi_az(false)
@@ -92,7 +92,7 @@ module CfnManage
           end
         end
         unless CfnManage.skip_wait?
-          $log.info("Waiting db instance to be stopped #{@instance_id}")
+          $log.info("Waiting for db instance to be stopped #{@instance_id}")
           wait('stopped')
         end
         return configuration
@@ -100,7 +100,7 @@ module CfnManage
 
       def set_rds_instance_multi_az(multi_az)
         if @rds_instance.multi_az == multi_az
-          $log.info("Rds instance #{@rds_instance.db_instance_identifier} already multi-az=#{multi_az}")
+          $log.info("RDS instance #{@rds_instance.db_instance_identifier} is already multi-az=#{multi_az}")
           return
         end
         @rds_instance.modify({ multi_az: multi_az, apply_immediately: true })
