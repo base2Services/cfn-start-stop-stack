@@ -8,7 +8,11 @@ cfn_manage version
 
 cfn_manage stop-environment --stack-name [STACK_NAME]
 
+cfn_manage stop-environment --stack-tag [STACK_TAG]
+
 cfn_manage start-environment --stack-name [STACK_NAME]
+
+cfn_manage start-environment --stack-tag [STACK_TAG]
 
 cfn_manage stop-asg --asg-name [ASG]
 

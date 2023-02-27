@@ -66,6 +66,12 @@ Order of operations is supported at this point as hardcoded weights per resource
 for supporting dynamic discovery of order of execution - local configuration file override is one of
 the possible sources.
 
+Both start and stop environment commands can take one of two arguments.
+
+Supplying `--stack-name` and the name of an existing CloudFormation stack will run the operation against it
+
+Supplying `--stack-tag` and a key value pair (`Key=Value`) will cause a lookup of any root CloudFormation stacks with a matching tag. These stacks will then be looped over and have the operation ran against them.
+
 
 ## Start - stop cloudformation stack
 
